@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 def receptive_field(output, stride, ksize):
@@ -9,7 +10,7 @@ def receptive_field(output, stride, ksize):
 
 def generator_loss(LAMBDA,disc_generated_field, generated_output, target_field):
 	BCElogits = nn.BCEWithLogitsLoss()
-	L1loss = nn.L1loss()
+	L1loss = nn.L1Loss()
 	
 	L1 = L1loss(generated_output,target_field)
 	g = BCElogits(torch.ones_like(disc_generated_field),disc_generated_field)

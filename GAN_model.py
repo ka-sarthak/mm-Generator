@@ -1,7 +1,5 @@
-from generator_models.FNO import FNO
-# from utilities import generator_loss, discriminator_loss
-
 import torch.nn as nn
+from generator_models.FNO import FNO
 
 class generator(nn.Module):
 	"""
