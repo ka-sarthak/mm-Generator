@@ -1,3 +1,8 @@
+# project specific
+training_log/
+saved_models/
+debugTest.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
