@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from time import time
 from model import Generator, Discriminator, GeneratorLoss, DiscriminatorLoss
@@ -19,7 +21,7 @@ x_val = x_normalizer.encode(val_data["input"])
 y_train = y_normalizer.encode(train_data["output"])
 
 ## training parameters
-epochs=500
+epochs=10
 learning_rate=0.001
 gamma=0.5
 step_size=100
@@ -33,6 +35,8 @@ g_model = Generator(modes=20,width=32,num_heads=1)
 d_model = Discriminator(psize=70,num_heads=1)
 CountParameters(g_model)
 CountParameters(d_model)
+g_model.double()
+d_model.double()
 
 g_optimizer = torch.optim.Adam(g_model.parameters(), lr=learning_rate, weight_decay=1e-4)
 g_scheduler = torch.optim.lr_scheduler.StepLR(g_optimizer, step_size=step_size, gamma=gamma)
@@ -43,33 +47,31 @@ d_scheduler = torch.optim.lr_scheduler.StepLR(d_optimizer, step_size=step_size, 
 '''
 	here, the validation loss is computed based on MAE
 '''
-for ep in len(epochs):
+for ep in range(epochs):
+	g_model.train()
+	d_model.train()
 	t1 = time()
 	g_train_loss = 0
 	d_train_loss = 0
 	for i,batch in tqdm(enumerate(train_loader)):
 		x = batch[0]
-		target = batch[0]
+		target = batch[1]
 
-		## evaluation from generator and discriminator
-		g_model.eval()
-		d_model.eval()
+		## training generator
 		generated_fake = y_normalizer.decode(g_model(x))
 		d_output_generated_fake = d_model(x,generated_fake)
-		d_output_real = d_model(x,target)
-	
-		## training generator
-		g_model.train()
 		g_optimizer.zero_grad()
-		g_loss = GeneratorLoss(generated_fake, target, d_output_generated_fake)
-		g_loss.backward()
+		g_loss = GeneratorLoss(generated_fake, target, d_output_generated_fake)[0]
+		g_loss.backward(retain_graph=True)
 		g_optimizer.step()
 		g_train_loss += g_loss.item()
 
 		## training discriminator
-		d_model.train()
+		generated_fake = y_normalizer.decode(g_model(x))
+		d_output_generated_fake = d_model(x,generated_fake)
+		d_output_real = d_model(x,target)
 		d_optimizer.zero_grad()
-		d_loss = DiscriminatorLoss(d_output_generated_fake,d_output_real)
+		d_loss = DiscriminatorLoss(d_output_generated_fake,d_output_real)[0]
 		d_loss.backward()
 		d_optimizer.step()
 		d_train_loss += d_loss.item()
@@ -78,6 +80,7 @@ for ep in len(epochs):
 	t2 = time()
 
 	## computing validation loss
+	g_model.eval()
 	g_val_loss = 0
 	for x,target in val_loader:
 		g_output = Generator(x)

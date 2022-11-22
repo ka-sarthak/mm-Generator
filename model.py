@@ -9,11 +9,11 @@ class Generator(nn.Module):
 	"""
 	def __init__(self, modes=20, width=32, num_heads=1):
 		super().__init__()
-		self.network = FNOBlock2d(modes, width, num_heads)
+		self.network = FNOBlock2d(modes,modes, width, num_heads)
 	
 	def forward(self,x):
 		x = self.network(x)
-		return x.squeeze()
+		return x#.squeeze()
 
 class Discriminator(nn.Module):
 	"""
@@ -28,7 +28,9 @@ class Discriminator(nn.Module):
 
 	def __init__(self,psize=70,num_heads=1):
 		super().__init__()
-
+		'''
+			Unlike original PatchGAN, we are not using padding. Therefore, the output fields are smaller than in the original paper.
+		'''
 		if psize == 70:
 			self.conv1 = nn.Conv2d(3+num_heads,64,4,stride=2,padding=0)
 			self.BN1 = nn.BatchNorm2d(64)
@@ -37,15 +39,15 @@ class Discriminator(nn.Module):
 			self.conv3 = nn.Conv2d(128,256,4,stride=2,padding=0)
 			self.BN3 = nn.BatchNorm2d(256)
 			self.conv4 = nn.Conv2d(256,512,4,stride=1,padding=0)
-			self.BN4 = nn.BatchNorm2d(256)
-			self.conv4 = nn.Conv2d(512,512,4,stride=1,padding=0)
-			self.BN4 = nn.BatchNorm2d(256)
+			self.BN4 = nn.BatchNorm2d(512)
+			self.conv5 = nn.Conv2d(512,1,4,stride=1,padding=0)
+			self.BN5 = nn.BatchNorm2d(1)
 
 		self.leakyrelu = nn.LeakyReLU()
 
 	def forward(self,inp,target):
 		tmp = torch.cat((inp,target),dim=-3)		## (3x256x256),(5x256x256)-->(8x256x256)
-		
+
 		tmp = self.conv1(tmp)
 		tmp = self.BN1(tmp)
 		tmp = self.leakyrelu(tmp)

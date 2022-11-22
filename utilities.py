@@ -5,14 +5,14 @@ import scipy.io
 def MAELoss(f1,f2):
 	return torch.mean(torch.abs(f1-f2))
 
-def receptive_field(output, stride, ksize):
+def ReceptiveField(output, stride, ksize):
 	"""
 		output field size is computed by Floor( (in+2p-ksize)/stride + 1)
 		therefore, in = (out-1)*stride -2p + ksize
 	"""
 	return (output-1)*stride+ksize
 
-def count_parameters(model):
+def CountParameters(model):
         table = PrettyTable(["Modules", "Parameters"])
         total_params = 0
         for name, parameter in model.named_parameters():
@@ -24,7 +24,7 @@ def count_parameters(model):
         print("Total Trainable Params: ", "{:,}".format(total_params))
         return total_params
 
-def importDataset(path, train_val_test_split):
+def ImportDataset(path, train_val_test_split):
 	"""
 		returns dictionary of features-labels for train, val, test datasets
 		return shape: (batch,channel,height,width)
@@ -63,11 +63,13 @@ class GaussianNormalizer(object):
         self.eps = eps
 
     def encode(self, x):
-        x = (x - self.mean) / (self.std + self.eps)
+        for i in range(len(self.mean)):
+            x[:,i,:,:] = (x[:,i,:,:] - self.mean[i]) / (self.std[i] + self.eps)
         return x
 
     def decode(self, x):
-        x = (x * (self.std + self.eps)) + self.mean
+        for i in range(len(self.mean)):
+            x[:,i,:,:] = (x[:,i,:,:] * (self.std[i] + self.eps)) + self.mean[i]
         return x
 
 # normalization, scaling by range

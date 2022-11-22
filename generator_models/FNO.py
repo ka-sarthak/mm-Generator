@@ -68,7 +68,7 @@ class FNOBlock2d(nn.Module):
         self.modes2 = modes2
         self.width = width
         self.num_heads = num_heads
-        self.fc0 = nn.Linear(3, self.width) # input channel is 3: (a(x, y), x, y)
+        self.fc0 = nn.Linear(3, self.width) # input channel is 3
 
         self.conv0 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)
         self.conv1 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)
@@ -84,8 +84,9 @@ class FNOBlock2d(nn.Module):
 
     def forward(self, x):
         batchsize = x.shape[0]
-        size_x, size_y = x.shape[1], x.shape[2]
+        size_x, size_y = x.shape[2], x.shape[3]
 
+        x = x.permute(0, 2, 3, 1)
         x = self.fc0(x)
         x = x.permute(0, 3, 1, 2)
 
@@ -112,30 +113,8 @@ class FNOBlock2d(nn.Module):
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
+        x = x.permute(0, 3, 1, 2)
+
         return x
-
-class FNO(nn.Module):
-    """
-    A wrapper function
-    """
-    def __init__(self, modes, width, num_heads):
-        super(FNO, self).__init__()
-        self.conv1 = SimpleBlock2d(modes, modes,  width, num_heads)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        return x.squeeze()
-        
-    def count_parameters(model):
-        table = PrettyTable(["Modules", "Parameters"])
-        total_params = 0
-        for name, parameter in model.named_parameters():
-            if not parameter.requires_grad: continue
-            params = parameter.numel()
-            table.add_row([name, params])
-            total_params+=params
-        print(table)
-        print("Total Trainable Params: ", "{:,}".format(total_params))
-        return total_params
 
 
