@@ -36,18 +36,18 @@ def ImportDataset(path, train_val_test_split):
 	val = scipy.io.loadmat(path+"./mat_files/PK11_val.mat")
 	test = scipy.io.loadmat(path+"./mat_files/test_100/PK11_test.mat")
 
-	train["input"] = torch.tensor(train["input"][:ntrain]).permute(0,3,1,2)
-	val["input"] = torch.tensor(val["input"][:nval]).permute(0,3,1,2)
-	test["input"] = torch.tensor(test["input"][:ntest]).permute(0,3,1,2)
+	train["input"] = torch.tensor(train["input"][:ntrain]).permute(0,3,1,2).float()
+	val["input"] = torch.tensor(val["input"][:nval]).permute(0,3,1,2).float()
+	test["input"] = torch.tensor(test["input"][:ntest]).permute(0,3,1,2).float()
 
 	if len(train["output"].shape) == 3:
-		train["output"] = torch.tensor(train["output"][:ntrain])[:,:,:,None]
-		val["output"] = torch.tensor(val["output"][:nval])[:,:,:,None]
-		test["output"] = torch.tensor(test["output"][:ntest])[:,:,:,None]
+		train["output"] = torch.tensor(train["output"][:ntrain])[:,:,:,None].float()
+		val["output"] = torch.tensor(val["output"][:nval])[:,:,:,None].float()
+		test["output"] = torch.tensor(test["output"][:ntest])[:,:,:,None].float()
 
-	val["output"] = val["output"].permute(0,3,1,2)
-	train["output"] = train["output"].permute(0,3,1,2)
-	test["output"] = test["output"].permute(0,3,1,2)
+	val["output"] = val["output"].permute(0,3,1,2).float()
+	train["output"] = train["output"].permute(0,3,1,2).float()
+	test["output"] = test["output"].permute(0,3,1,2).float()
 
 	return train, val, test
 
