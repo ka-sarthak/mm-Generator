@@ -1,19 +1,21 @@
+import torch
 import torch.nn as nn
-from generator_models.FNO import FNO
+from generator_models.FNO import FNOBlock2d
 
-class generator(nn.Module):
+class Generator(nn.Module):
 	"""
 		Picks up the network from the generator models: FNO, UNet, ...
+		also acts as a wrapper function
 	"""
 	def __init__(self, modes=20, width=32, num_heads=1):
 		super().__init__()
-		self.network = FNO(modes, width, num_heads)
+		self.network = FNOBlock2d(modes, width, num_heads)
 	
-	def forward(self,tmp):
-		tmp = self.network(tmp)
-		return tmp
+	def forward(self,x):
+		x = self.network(x)
+		return x.squeeze()
 
-class discriminator(nn.Module):
+class Discriminator(nn.Module):
 	"""
 		PatchGAN network that evaluates pxp patch in the field as real or fake.
 		It takes the input and the target image and returns a 2D probability field, where each pixel gives the probability that the 
@@ -66,3 +68,23 @@ class discriminator(nn.Module):
 
 		return tmp
 
+def GeneratorLoss(generated_output, target_field, disc_generated_field, LAMBDA=100):
+	BCElogits = nn.BCEWithLogitsLoss()
+	L1loss = nn.L1Loss()
+	
+	L1 = L1loss(generated_output,target_field)
+	g = BCElogits(torch.ones_like(disc_generated_field),disc_generated_field)
+	
+	gen_loss = g + L1*LAMBDA
+	
+	return gen_loss, g, L1
+
+def DiscriminatorLoss(disc_generated_field, disc_target_field):
+	BCElogits = nn.BCEWithLogitsLoss()
+	
+	generated_loss = BCElogits(torch.zeros_like(disc_generated_field),disc_generated_field)
+	real_loss = BCElogits(torch.ones_like(disc_target_field),disc_target_field)
+
+	disc_loss = generated_loss+real_loss
+
+	return disc_loss, generated_loss, real_loss

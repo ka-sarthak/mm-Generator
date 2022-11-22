@@ -48,7 +48,7 @@ class SpectralConv2d(nn.Module):
         x = torch.irfft(out_ft, 2, normalized=True, onesided=True, signal_sizes=( x.size(-2), x.size(-1)))
         return x
 
-class SimpleBlock2d(nn.Module):
+class FNOBlock2d(nn.Module):
     """
         The overall network. It contains 4 layers of the Fourier layer.
         1. Lift the input to the desire channel dimension by self.fc0 .
@@ -62,7 +62,7 @@ class SimpleBlock2d(nn.Module):
         output shape: (batchsize, x=s, y=s, c=num_heads)
     """
     def __init__(self, modes1, modes2,  width, num_heads):
-        super(SimpleBlock2d, self).__init__()
+        super(FNOBlock2d, self).__init__()
 
         self.modes1 = modes1
         self.modes2 = modes2
