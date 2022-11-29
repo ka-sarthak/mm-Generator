@@ -2,6 +2,7 @@
 training_log/
 saved_models/
 debugTest.py
+training_ouput/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
