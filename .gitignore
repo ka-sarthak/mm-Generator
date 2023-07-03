@@ -3,6 +3,11 @@ training_log/
 saved_models/
 debugTest.py
 training_output/
+log_*
+*.out
+testing/
+extras/
+*logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

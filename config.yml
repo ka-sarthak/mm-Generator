@@ -1,0 +1,27 @@
+experiment:
+  # name of the experiment
+  name: test
+  # generator can be FNO, UNet
+  generator: UNet
+  num_heads: 5
+
+path:
+  saveModel: 
+
+model: 
+  UNet:
+    version: standard
+  FNO:
+  GAN: 
+
+training:
+  epochs: 200
+  learningRate: 0.001
+  batchSize: 16
+
+inference:
+  # by default, all the test cases in the data folder will be used
+  # if include is not None, only the specified tests will be used
+  # if exclude is not None, all but the specified tests will be used
+  include: None
+  exclude: None
