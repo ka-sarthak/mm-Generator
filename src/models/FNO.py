@@ -2,13 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils.layers import SpectralConv2d
+from utils.config_module import config
 
 class FNO(nn.Module):
     '''
         FNO wrapper class
     ''' 
-    def __init__(self,modes1,modes2,width,num_heads,version="standard"):
+    def __init__(self):
         super().__init__()
+
+        num_heads = config["experiment"]["outputHeads"]
+        version = config["model"]["FNO"]["version"]
+        modes1 = config["model"]["FNO"]["modes1"]
+        modes2 = config["model"]["FNO"]["modes2"]
+        width = config["model"]["FNO"]["width"]
+
         if version == "standard":
             self.network = FNOBlock2d(modes1,modes2,width,num_heads)
         elif version == "standard_from_firstFL":
@@ -39,7 +47,7 @@ class FNOBlock2d(nn.Module):
         self.modes2 = modes2
         self.width = width
         self.num_heads = num_heads
-        self.fc0 = nn.Linear(3, self.width) # input channel is 3
+        self.fc0 = nn.Linear(config["experiment"]["inputHeads"], self.width) # input channel is 3
 
         self.conv0 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)
         self.conv1 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)
@@ -106,7 +114,7 @@ class FNOBlock2d_from_thirdFL(nn.Module):
         self.modes2 = modes2
         self.width = width
         self.num_heads = num_heads
-        self.fc0 = nn.Linear(3, self.width) # input channel is 3
+        self.fc0 = nn.Linear(config["experiment"]["inputHeads"], self.width) # input channel is 3
 
         self.conv0 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)
         self.conv1 = SpectralConv2d(self.width, self.width, self.modes1, self.modes2)
@@ -178,7 +186,7 @@ class FNOBlock2d_from_firstFL(nn.Module):
         self.modes2 = modes2
         self.width = width
         self.num_heads = num_heads
-        self.fc0 = nn.Linear(3, self.width) # input channel is 3
+        self.fc0 = nn.Linear(config["experiment"]["inputHeads"], self.width) # input channel is 3
 
         self.conv0List = nn.ModuleList([SpectralConv2d(self.width, self.width, self.modes1, self.modes2) for _ in range(self.num_heads)])
         self.conv1List = nn.ModuleList([SpectralConv2d(self.width, self.width, self.modes1, self.modes2) for _ in range(self.num_heads)])

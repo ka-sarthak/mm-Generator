@@ -3,8 +3,7 @@ import os, psutil
 import json
 import time
 from torch.nn import L1Loss 
-from models.UNet import UNet
-from models.FNO import FNO
+from models.generator import Generator
 from utils.config_module import config
 from utils.data_processing import makePathAndDirectories, importDataset, scaleDataset
 from utils.utilities import countParameters
@@ -13,56 +12,44 @@ from utils.postprocessing import lossPlots
 def train():
 	## configs and paths
 	training_config = config["training"]
-	exp_config = config["experiment"]
-	exp_name = exp_config["name"]
 	
-	if exp_config["generator"] == "UNet":
-		model_config = config["model"]["UNet"]  
-	elif exp_config["generator"] == "FNO":
-		model_config = config["model"]["FNO"]
-	else:
-		raise AssertionError("Unexpected argument for generator.")  
-
-	path_save_model, path_training_log, path_loss_plot = makePathAndDirectories(config)
+	path_save_model, path_training_log, path_loss_plot = makePathAndDirectories()
 
 	## setup logger for continued training or new training
-	if exp_config["continueTraining"] == True:
-		gcheckpoint = torch.load(path_save_model+f"{exp_name}.pt")
+	if training_config["continueTraining"] == True:
+		gcheckpoint = torch.load(path_save_model+f"generator.pt")
 		epoch_completed   = gcheckpoint["epoch_completed"]
 		g_loss_training   = gcheckpoint["training_loss"]
 		g_loss_validation = gcheckpoint["validation_loss"]
-		logfile = open(path_training_log + f"{exp_name}.log", "a")
+		logfile = open(path_training_log + f"training.log", "a")
 	else:
 		epoch_completed = 0
 		g_loss_training   = []
 		g_loss_validation = []
-		logfile = open(path_training_log + f"{exp_name}.log", "w")
+		logfile = open(path_training_log + f"training.log", "w")
 
 	## import dataset 
-	train_data, val_data, _ = importDataset(config["path"]["data"], training_config["trainValTestSplit"], exp_config["outputHeads"])
+	train_data, val_data, _ = importDataset()
 	
 	## get scaled dataset and trained Scaler objects
-	x_train, y_train, x_val, y_val, x_scaler, y_scaler = scaleDataset(train_data,val_data,model_config["scaler"])
+	x_train, y_train, x_val, y_val, x_scaler, y_scaler = scaleDataset(train_data,val_data)
 	print("Shape of the training data (X,y): ", x_train.shape, y_train.shape)
 	print("Shape of the validation data (X,y): ", x_val.shape, y_val.shape)
 
-	## define dataloaders, models, and optimizers
+	## define dataloaders
 	train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=training_config["batchSize"], shuffle=True)
 	val_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_val, y_val), batch_size=training_config["trainValTestSplit"][1], shuffle=False)
 
 	## define the generator model, optimizer, scheduler, loss function
-	if exp_config["generator"] == "UNet":
-		g_model = UNet(kernel=model_config["kernel"], in_channels=exp_config["inputHeads"], out_channels=exp_config["outputHeads"], version=model_config["version"])
-	elif exp_config["generator"] == "FNO":
-		g_model = FNO(modes1=model_config["modes1"],modes2=model_config["modes2"],width=model_config["width"],num_heads=exp_config["outputHeads"],version=model_config["version"])
-	
+	g_model = Generator()
+
 	g_optimizer = torch.optim.Adam(g_model.parameters(), lr=training_config["learningRate"], weight_decay=training_config["weightDecay"])
 	g_scheduler = torch.optim.lr_scheduler.StepLR(g_optimizer, step_size=training_config["stepSize"], gamma=training_config["gamma"])
 	Loss = L1Loss()
 	metric = L1Loss()
 	
 	## load states if continued Training
-	if exp_config["continueTraining"] == True:
+	if training_config["continueTraining"] == True:
 		g_model.load_state_dict(gcheckpoint['model_state_dict'])
 		g_optimizer.load_state_dict(gcheckpoint['optimizer_state_dict'])
 		g_scheduler.load_state_dict(gcheckpoint['scheduler_state_dict'])
@@ -125,7 +112,7 @@ def train():
 			'training_loss': g_loss_training,
 			'validation_loss': g_loss_validation
 		},
-		path_save_model+f"{exp_name}.pt")
-	lossPlots(g_loss_training,g_loss_validation,path_loss_plot,exp_name)
+		path_save_model+f"generator.pt")
+	lossPlots(g_loss_training,g_loss_validation,path_loss_plot)
 
 	logfile.close()

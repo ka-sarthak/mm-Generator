@@ -3,13 +3,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from utils.layers import PeriodicSeparableConv
+from utils.config_module import config
 
 class UNet(nn.Module):
 	'''
 		UNet Wrapper class
 	'''
-	def __init__(self, kernel, in_channels, out_channels, version="standard"):
+	def __init__(self):
 		super().__init__()
+		in_channels = config["experiment"]["inputHeads"]
+		out_channels = config["experiment"]["outputHeads"]
+		kernel = config["model"]["UNet"]["kernel"]
+		version = config["model"]["UNet"]["version"]
 		if version == "standard":
 			self.network = UNet_standard(kernel, in_channels, out_channels)
 		elif version == "standard_from_output":
@@ -38,9 +43,9 @@ class UNet_standard(nn.Module):
 		super().__init__()
 		self.num_heads = out_channels
 
-		enc_channels = np.array([16,32,64,128])
-		interface_channel = 256
-		dec_channels = np.array([128,64,32,16])
+		enc_channels = config["model"]["UNet"]["encChannels"]
+		interface_channel = config["model"]["UNet"]["interfaceChannels"]
+		dec_channels = config["model"]["UNet"]["decChannels"]
 
 		self.Enc0 =  Encoding_standard(channels=[    in_channels, enc_channels[0]],  kernel=kernel)
 		self.Enc1 =  Encoding_standard(channels=[enc_channels[0], enc_channels[1]],  kernel=kernel)
@@ -99,9 +104,9 @@ class UNet_standard_from_enc(nn.Module):
 		super().__init__()
 		self.num_heads = out_channels
 
-		enc_channels = np.array([16,32,64,128])
-		interface_channel = 256
-		dec_channels = np.array([128,64,32,16])
+		enc_channels = config["model"]["UNet"]["encChannels"]
+		interface_channel = config["model"]["UNet"]["interfaceChannels"]
+		dec_channels = config["model"]["UNet"]["decChannels"]
 
 		self.Enc0List =  nn.ModuleList([Encoding_standard(channels=[    in_channels, enc_channels[0]],  kernel=kernel) for _ in range(self.num_heads)])
 		self.Enc1List =  nn.ModuleList([Encoding_standard(channels=[enc_channels[0], enc_channels[1]],  kernel=kernel) for _ in range(self.num_heads)])
@@ -162,9 +167,9 @@ class UNet_standard_from_output(nn.Module):
 		super().__init__()
 		self.num_heads = out_channels
 
-		enc_channels = np.array([16,32,64,128])
-		interface_channel = 256
-		dec_channels = np.array([128,64,32,16])
+		enc_channels = config["model"]["UNet"]["encChannels"]
+		interface_channel = config["model"]["UNet"]["interfaceChannels"]
+		dec_channels = config["model"]["UNet"]["decChannels"]
 
 		self.Enc0 =  Encoding_standard(channels=[    in_channels, enc_channels[0]],  kernel=kernel)
 		self.Enc1 =  Encoding_standard(channels=[enc_channels[0], enc_channels[1]],  kernel=kernel)
@@ -221,15 +226,18 @@ class UNet_modified(nn.Module):
 		super().__init__()
 		self.num_heads = out_channels
 		
-		self.Enc0 = Encoding_modified(channels=[in_channels, 16],  kernel=kernel)
-		self.Enc1 = Encoding_modified(channels=[			16, 32],  kernel=kernel)
-		self.Enc2 = Encoding_modified(channels=[			32, 64],  kernel=kernel)
-		self.Enc3 = Encoding_modified(channels=[			64,128],  kernel=kernel)
+		enc_channels = config["model"]["UNet"]["encChannels"]
+		dec_channels = config["model"]["UNet"]["decChannels"]
 
-		self.Dec0List = nn.ModuleList([Decoding(channels=[128+64, 64], kernel=kernel) for _ in range(self.num_heads)])
-		self.Dec1List = nn.ModuleList([Decoding(channels=[ 64+32, 32], kernel=kernel) for _ in range(self.num_heads)])
-		self.Dec2List = nn.ModuleList([Decoding(channels=[ 32+16, 16], kernel=kernel) for _ in range(self.num_heads)])
-		self.Dec3List = nn.ModuleList([Decoding(channels=[ 16+ 3,  1], kernel=kernel) for _ in range(self.num_heads)])
+		self.Enc0 = Encoding_modified(channels=[    in_channels, enc_channels[0]],  kernel=kernel)
+		self.Enc1 = Encoding_modified(channels=[enc_channels[0], enc_channels[1]],  kernel=kernel)
+		self.Enc2 = Encoding_modified(channels=[enc_channels[1], enc_channels[2]],  kernel=kernel)
+		self.Enc3 = Encoding_modified(channels=[enc_channels[2], enc_channels[3]],  kernel=kernel)
+
+		self.Dec0List = nn.ModuleList([Decoding(channels=[dec_channels[0] + enc_channels[2], dec_channels[1]], kernel=kernel) for _ in range(self.num_heads)])
+		self.Dec1List = nn.ModuleList([Decoding(channels=[dec_channels[1] + enc_channels[1], dec_channels[2]], kernel=kernel) for _ in range(self.num_heads)])
+		self.Dec2List = nn.ModuleList([Decoding(channels=[dec_channels[2] + enc_channels[0], dec_channels[3]], kernel=kernel) for _ in range(self.num_heads)])
+		self.Dec3List = nn.ModuleList([Decoding(channels=[dec_channels[3] +     in_channels,  1], kernel=kernel) for _ in range(self.num_heads)])
 
 	def forward(self, x):
 		in_shape = x.shape

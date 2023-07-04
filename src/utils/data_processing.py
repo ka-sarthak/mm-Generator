@@ -1,10 +1,11 @@
 import scipy.io
 import torch
 import os
+from utils.config_module import config
 
-def makePathAndDirectories(config):
+def makePathAndDirectories():
 	## make paths and directories
-	path_save_model   = os.path.join(config["path"]["saveModel"],config["experiment"]["model"],config["experiment"]["generator"],"")
+	path_save_model   = os.path.join(config["path"]["saveModel"],config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
 	path_training_log = os.path.join(config["path"]["saveModel"], "training_log",config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
 	path_loss_plot    = os.path.join(path_training_log, "loss_plot","")
 	os.makedirs(path_training_log,exist_ok=True)
@@ -13,11 +14,15 @@ def makePathAndDirectories(config):
 	
 	return path_save_model, path_training_log, path_loss_plot
 
-def importDataset(path, train_val_test_split, num_heads, only_test=False):
+def importDataset(only_test=False):
 	"""
 		returns dictionary of features-labels for train, val, test datasets
 		return shape: (batch,channel,height,width)
 	"""
+	path = config["path"]["data"]
+	train_val_test_split = config["training"]["trainValTestSplit"]
+	num_heads = config["experiment"]["outputHeads"]
+
 	ntrain = train_val_test_split[0]
 	nval = train_val_test_split[1]
 	ntest = train_val_test_split[2]
@@ -61,8 +66,9 @@ def importDataset(path, train_val_test_split, num_heads, only_test=False):
 			raise AssertionError("Unexpected shape for y.")
 		return train, val, test
 
-def scaleDataset(train_data, val_data, scalerName="MinMax"):
+def scaleDataset(train_data, val_data):
 		## define normalizers based on training data
+		scalerName = config["dataProcessing"]["scaler"]
 		if scalerName == "MinMax":
 			x_normalizer = MinMaxScaling(train_data["input"])
 			y_normalizer = MinMaxScaling(train_data["output"])
@@ -118,30 +124,3 @@ class MinMaxScaling():
 		for i in range(len(self.min)):
 			z[:,i,:,:] = (x[:,i,:,:] * (self.max[i] - self.min[i])) +  self.min[i]
 		return z
-
-# normalization, scaling by range
-class RangeNormalizer(object):
-	"""
-		need fixing: number of channels
-	"""
-	def __init__(self, x, low=0.0, high=1.0):
-		super(RangeNormalizer, self).__init__()
-		mymin = torch.min(x, 0)[0].view(-1)
-		mymax = torch.max(x, 0)[0].view(-1)
-
-		self.a = (high - low)/(mymax - mymin)
-		self.b = -self.a*mymax + high
-
-	def encode(self, x):
-		s = x.size()
-		x = x.view(s[0], -1)
-		x = self.a*x + self.b
-		x = x.view(s)
-		return x
-
-	def decode(self, x):
-		s = x.size()
-		x = x.view(s[0], -1)
-		x = (x - self.b)/self.a
-		x = x.view(s)
-		return x

@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import os
+from utils.config_module import config
 
-def lossPlots(gen_train_loss,gen_val_loss,save_path,exp_name=""):
+def lossPlots(gen_train_loss,gen_val_loss,save_path):
+	exp_name = config["experiment"]["name"]
 	plt.figure()
 	plt.title(f"Generator training loss {exp_name}")
 	plt.xlabel("epochs")
@@ -27,7 +29,8 @@ def lossPlots(gen_train_loss,gen_val_loss,save_path,exp_name=""):
 	plt.savefig(f"{save_path}/gen_train_val_loss.png")
 	plt.close()
 
-def lossPlotsGAN(gen_train_loss,gen_val_loss,disc_train_loss,save_path,exp_name=""):
+def lossPlotsGAN(gen_train_loss,gen_val_loss,disc_train_loss,save_path):
+	exp_name = config["experiment"]["name"]
 	save_path = save_path + "/loss_plots"
 	os.makedirs(save_path,exist_ok=True)
 	
