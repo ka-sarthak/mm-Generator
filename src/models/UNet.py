@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-
+from utils.layers import PeriodicSeparableConv
 
 class UNet(nn.Module):
 	'''
@@ -270,6 +270,9 @@ class Encoding_modified(nn.Module):
 		return x, x
 	
 class Encoding_standard(nn.Module):
+	'''
+		Taken from the original UNet 2016 paper
+	'''
 	def __init__(self, channels, kernel):
 		super().__init__()
 		self.conv = PeriodicSeparableConv(channels[0], channels[1], kernel)
@@ -313,57 +316,3 @@ class EndConv(nn.Module):
 
 	def forward(self, x):
 		return self.conv(x)
-	
-class PeriodicConv(nn.Module):
-	def __init__(self, in_channels, out_channels, kernel):
-		super().__init__()
-		self.conv = nn.Conv2d(in_channels,out_channels,kernel,padding="valid")
-		self.padding = int((kernel-1)/2)
-	
-	def forward(self, x):
-		x = periodic_padding(x,[2,3],[self.padding,self.padding])
-		return self.conv(x)
-
-class PeriodicSeparableConv(nn.Module):
-	"""
-		first convolution done individually over all channels
-		second convolution is 1x1 convolution, which convolves at same spatial position for all channels 
-	"""
-	def __init__(self, in_channels, out_channels, kernel):
-		super().__init__()
-		# self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,groups=in_channels,padding="same",bias=False)
-		# self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,padding="same")
-		self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,groups=in_channels,padding="valid",bias=False)
-		self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,padding="valid")
-		self.padding = int((kernel-1)/2)
-	
-	def forward(self, x):
-		x = periodic_padding(x,[2,3],[self.padding,self.padding])
-		return self.convDepthwise(self.convSpatial(x))
-
-def periodic_padding(tensor, axis, padding):
-    """
-		Add periodic padding to a tensor for specified axis.
-
-		:param tensor: the input tensor.
-		:param axis: one or multiple axis for padding; an integer or a tuple of ints.
-		:param padding: the padding size; int or tuple of ints corresponding to axis.
-		:return: padded tensor.
-    """
-
-    if isinstance(axis, int):
-        axis = (axis, )
-    if isinstance(padding, int):
-        padding = (padding, )
-    assert len(axis) == len(padding), 'the number of axis and paddings are different.'
-    ndim = len(tensor.shape)
-    for ax, p in zip(axis, padding):
-        # create a slice object that selects everything from all axes,
-        # except only 0:p for the specified for right, and -p: for left
-        ind_right = [slice(-p, None) if i == ax else slice(None) for i in range(ndim)]
-        ind_left = [slice(0, p) if i == ax else slice(None) for i in range(ndim)]
-        right = tensor[ind_right]
-        left = tensor[ind_left]
-        middle = tensor
-        tensor = torch.cat([right, middle, left], axis=ax)
-    return tensor

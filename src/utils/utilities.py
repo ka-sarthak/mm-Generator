@@ -42,3 +42,32 @@ def countParameters(model,logfile=None):
 			print(table)
 			print("Total Trainable Params: ", "{:,}".format(total_params))
 		return total_params
+
+def periodic_padding(tensor, axis, padding):
+    """
+		Implemented by Nima
+		
+		Add periodic padding to a tensor for specified axis.
+
+		:param tensor: the input tensor.
+		:param axis: one or multiple axis for padding; an integer or a tuple of ints.
+		:param padding: the padding size; int or tuple of ints corresponding to axis.
+		:return: padded tensor.
+    """
+
+    if isinstance(axis, int):
+        axis = (axis, )
+    if isinstance(padding, int):
+        padding = (padding, )
+    assert len(axis) == len(padding), 'the number of axis and paddings are different.'
+    ndim = len(tensor.shape)
+    for ax, p in zip(axis, padding):
+        # create a slice object that selects everything from all axes,
+        # except only 0:p for the specified for right, and -p: for left
+        ind_right = [slice(-p, None) if i == ax else slice(None) for i in range(ndim)]
+        ind_left = [slice(0, p) if i == ax else slice(None) for i in range(ndim)]
+        right = tensor[ind_right]
+        left = tensor[ind_left]
+        middle = tensor
+        tensor = torch.cat([right, middle, left], axis=ax)
+    return tensor
