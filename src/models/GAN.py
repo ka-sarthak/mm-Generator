@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from torch.nn import L1Loss, BCELoss
 import torch.nn.functional as F
-from generator_models.FNO import FNOBlock2d
-from generator_models.UNet import UNet
+from models.FNO import FNO
+from models.UNet import UNet
 
 class Generator(nn.Module):
 	"""

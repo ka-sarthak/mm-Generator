@@ -3,8 +3,8 @@ import os, psutil
 import json
 import time
 from torch.nn import L1Loss 
-from generator_models.UNet import UNet
-from generator_models.FNO import FNO
+from models.UNet import UNet
+from models.FNO import FNO
 from utils.config_module import config
 from utils.data_processing import makePathAndDirectories, importDataset, scaleDataset
 from utils.utilities import countParameters
