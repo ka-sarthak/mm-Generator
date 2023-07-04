@@ -2,6 +2,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class FNO(nn.Module):
+    '''
+        FNO wrapper class
+    ''' 
+    def __init__(self,modes1,modes2,width,num_heads,version="standard"):
+        super().__init__()
+        if version == "standard":
+            self.network = FNOBlock2d(modes1,modes2,width,num_heads)
+        elif version == "standard_from_firstFL":
+            self.network = FNOBlock2d_from_firstFL(modes1,modes2,width,num_heads)
+        elif version == "standard_from_thirdFL":
+            self.network = FNOBlock2d_from_thirdFL(modes1,modes2,width,num_heads)
+        else:
+            raise AssertionError("Unexpected FNO version.")
+    
+    def forward(self,x):
+        return self.network(x)
+
 class FNOBlock2d(nn.Module):
     """
         The overall network. It contains 4 layers of the Fourier layer.
@@ -14,7 +32,7 @@ class FNOBlock2d(nn.Module):
         output shape: (batchsize, dimx, dimy, num_heads)
     """
     def __init__(self, modes1, modes2,  width, num_heads):
-        super(FNOBlock2d, self).__init__()
+        super().__init__()
 
         self.modes1 = modes1
         self.modes2 = modes2
@@ -81,7 +99,7 @@ class FNOBlock2d_from_thirdFL(nn.Module):
         output shape: (batchsize, dimx, dimy, num_heads)
     """
     def __init__(self, modes1, modes2,  width, num_heads):
-        super(FNOBlock2d_from_thirdFL, self).__init__()
+        super().__init__()
 
         self.modes1 = modes1
         self.modes2 = modes2
@@ -153,7 +171,7 @@ class FNOBlock2d_from_firstFL(nn.Module):
         output shape: (batchsize, dimx, dimy, num_heads)
     """
     def __init__(self, modes1, modes2,  width, num_heads):
-        super(FNOBlock2d_from_firstFL, self).__init__()
+        super().__init__()
 
         self.modes1 = modes1
         self.modes2 = modes2
@@ -217,7 +235,7 @@ class SpectralConv2d(nn.Module):
     2D Fourier layer. It does FFT, linear transform, and Inverse FFT.    
     """
     def __init__(self, in_channels, out_channels, modes1, modes2):
-        super(SpectralConv2d, self).__init__()
+        super().__init__()
 
         self.in_channels = in_channels
         self.out_channels = out_channels

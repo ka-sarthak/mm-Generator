@@ -19,8 +19,7 @@ class UNet(nn.Module):
 		elif version == "modified":
 			self.network = UNet_modified(kernel, in_channels, out_channels)
 		else:
-			print("bad version")
-			exit()
+			raise AssertionError("Unexpected UNet version.")
 
 	def	forward(self, x):
 		return self.network(x)	
