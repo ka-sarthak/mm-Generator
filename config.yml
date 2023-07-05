@@ -1,20 +1,20 @@
 experiment:
   name: test
-  model: nonGAN            # GAN, nonGAN
-  generator: UNet       # FNO, UNet
+  model: GAN                  # GAN, nonGAN
+  generator: FNO              # FNO, UNet
   inputHeads: 3
   outputHeads: 5
 
 path:
-  data: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/64
+  data: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/256
   saveModel: /Users/kapoor/Articles/githubGAN/mmGAN/saved_models
 
 dataProcessing:
-  scaler: MinMax    # MinMax or Gaussian
+  scaler: MinMax              # MinMax or Gaussian
 
 model: 
   UNet:
-    version: standard
+    version: standard         # standard or standard_from_output or standard_from_enc or modified 
     kernel: 9
     encChannels: 
                 - 16
@@ -29,21 +29,21 @@ model:
     interfaceChannels: 256
 
   FNO:
-    version: standard
+    version: standard         # standard or standard_from_firstFL or standard_from_thirdFL
     modes1: 20
     modes2: 20
     width: 32
 
   GAN: 
-    discVersion: UNet-enc
-    LAMBDA: 
+    discVersion: UNet-enc     # UNet-enc or original or modified
+    LAMBDA: 100
 
 
 training:
   continueTraining: False
   epochs: 2
   trainValTestSplit:
-                  - 80
+                  - 8
                   - 100
                   - 100
   batchSize: 2

@@ -1,5 +1,5 @@
 from utils.config_module import config
-from train_module import train_nonGAN
+from train_module import train_nonGAN, train_GAN
 
 def train():
     if config["experiment"]["model"] == "GAN":
