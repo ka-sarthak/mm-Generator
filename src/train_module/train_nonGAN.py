@@ -15,19 +15,6 @@ def train():
 	
 	path_save_model, path_training_log, path_loss_plot = makePathAndDirectories()
 
-	## setup logger for continued training or new training
-	if training_config["continueTraining"] == True:
-		gcheckpoint = torch.load(path_save_model+f"generator.pt")
-		epoch_completed   = gcheckpoint["epoch_completed"]
-		g_loss_training   = gcheckpoint["training_loss"]
-		g_loss_validation = gcheckpoint["validation_loss"]
-		logfile = open(path_training_log + f"training.log", "a")
-	else:
-		epoch_completed = 0
-		g_loss_training   = []
-		g_loss_validation = []
-		logfile = open(path_training_log + f"training.log", "w")
-
 	## import dataset 
 	train_data, val_data, _ = importDataset()
 	
@@ -39,6 +26,19 @@ def train():
 	## define dataloaders
 	train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=training_config["batchSize"], shuffle=True)
 	val_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_val, y_val), batch_size=training_config["trainValTestSplit"][1], shuffle=False)
+
+	## setup logger for continued training or new training
+	if training_config["continueTraining"] == True:
+		gcheckpoint = torch.load(path_save_model+"generator.pt")
+		epoch_completed   = gcheckpoint["epoch_completed"]
+		g_loss_training   = gcheckpoint["training_loss"]
+		g_loss_validation = gcheckpoint["validation_loss"]
+		logfile = open(path_training_log + "training.log", "a")
+	else:
+		epoch_completed = 0
+		g_loss_training   = []
+		g_loss_validation = []
+		logfile = open(path_training_log + "training.log", "w")
 
 	## define the generator model, optimizer, scheduler, loss function
 	g_model = Generator()
@@ -95,9 +95,8 @@ def train():
 			loss    += metric(g_output,target).item()/1e6
 		g_loss_validation.append( loss/len(val_loader))
 
-
 		logfile.write(f"\nEpoch: {ep}\t Time(s): {t2-t1} \t g_train_loss: {g_loss_epoch}\t g_val_loss: {g_loss_validation[-1]}")
-		print(f"{ep} \t t:{t2-t1} \t g_train_loss:{g_loss_epoch} \t g_val_loss:{g_loss_validation[-1]} \t MEM (MB): {psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2}", flush=True)
+		print(f"{ep} \t t:{t2-t1} \t g_train_loss:{g_loss_epoch} \t g_val_loss:{g_loss_validation[-1]} \t MEM:{round(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 3,2)} GB", flush=True)
 		
 		ep+=1
 

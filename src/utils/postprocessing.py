@@ -4,6 +4,7 @@ from utils.config_module import config
 
 def lossPlots(gen_train_loss,gen_val_loss,save_path):
 	exp_name = config["experiment"]["name"]
+	
 	plt.figure()
 	plt.title(f"Generator training loss {exp_name}")
 	plt.xlabel("epochs")
@@ -44,7 +45,7 @@ def lossPlotsGAN(gen_train_loss,gen_val_loss,disc_train_loss,save_path):
 	plt.savefig(f"{save_path}/gen_train_loss.png")
 	plt.close()
 
-	if disc_train_loss!= None:
+	if disc_train_loss != None:
 		plt.figure()
 		plt.title(f"Discriminator training loss {exp_name}")
 		plt.xlabel("epochs")
