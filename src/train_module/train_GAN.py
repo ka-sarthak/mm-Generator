@@ -73,8 +73,8 @@ def train():
 		logfile.write("-----------config-----------\n")
 		logfile.write(json.dumps(config,indent=4))
 		logfile.write("\n--------------------------------\n")
-		countParameters(g_model)
-		countParameters(d_model)
+		countParameters(g_model,logfile)
+		countParameters(d_model,logfile)
 
 	## training loop
 	ep = epoch_completed + 1
