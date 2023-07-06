@@ -23,6 +23,7 @@ def makePathAndDirectoriesTraining():
 def makePathAndDirectoriesTesting():
 	path_save_model   = os.path.join(config["path"]["saveModel"],config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
 	path_inference	  = os.path.join(config["path"]["inference"],config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
+	os.makedirs(path_inference,exist_ok=True)
 	
 	return path_save_model, path_inference
 
