@@ -18,7 +18,7 @@ class Discriminator(nn.Module):
 
 	def __init__(self):
 		super().__init__()
-		self.version = config["model"]["GAN"]["discVersion"]
+		self.version = config["model"]["GAN"]["discriminatorVersion"]
 		num_heads = config["experiment"]["outputHeads"]
 		
 		if self.version == "UNet-enc":

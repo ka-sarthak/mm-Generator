@@ -35,9 +35,8 @@ model:
     width: 32
 
   GAN: 
-    discVersion: UNet-enc     # UNet-enc or original or modified
+    discriminatorVersion: UNet-enc     # UNet-enc or original or modified
     LAMBDA: 100
-
 
 training:
   continueTraining: False
