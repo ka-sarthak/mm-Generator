@@ -3,8 +3,14 @@ import torch
 import os
 from utils.config_module import config
 
-def makePathAndDirectories():
-	## make paths and directories
+def makePathAndDirectories(training=True):
+	## make paths and directories for training
+	if training == True:
+		return	makePathAndDirectoriesTraining()
+	elif training == False:
+		return	makePathAndDirectoriesTesting()
+  
+def makePathAndDirectoriesTraining():
 	path_save_model   = os.path.join(config["path"]["saveModel"],config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
 	path_training_log = os.path.join(config["path"]["saveModel"], "training_log",config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
 	path_loss_plot    = os.path.join(path_training_log, "loss_plot","")
@@ -14,12 +20,18 @@ def makePathAndDirectories():
 	
 	return path_save_model, path_training_log, path_loss_plot
 
+def makePathAndDirectoriesTesting():
+	path_save_model   = os.path.join(config["path"]["saveModel"],config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
+	path_inference	  = os.path.join(config["path"]["inference"],config["experiment"]["model"],config["experiment"]["generator"],config["experiment"]["name"],"")
+	
+	return path_save_model, path_inference
+
 def importDataset(only_test=False):
 	"""
 		returns dictionary of features-labels for train, val, test datasets
 		return shape: (batch,channel,height,width)
 	"""
-	path = config["path"]["data"]
+	path = config["path"]["trainingData"]
 	train_val_test_split = config["training"]["trainValTestSplit"]
 	num_heads = config["experiment"]["outputHeads"]
 

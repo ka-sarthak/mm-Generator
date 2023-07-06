@@ -1,13 +1,15 @@
 experiment:
   name: test
-  model: GAN                  # GAN, nonGAN
-  generator: FNO              # FNO, UNet
+  model: nonGAN                  # GAN, nonGAN
+  generator: UNet              # FNO, UNet
   inputHeads: 3
   outputHeads: 5
 
 path:
-  data: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/256
+  trainingData: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/256
+  testingData: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/testing
   saveModel: /Users/kapoor/Articles/githubGAN/mmGAN/saved_models
+  inference: /Users/kapoor/Articles/githubGAN/mmGAN/inferences
 
 dataProcessing:
   scaler: MinMax              # MinMax or Gaussian
