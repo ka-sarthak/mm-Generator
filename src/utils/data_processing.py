@@ -40,14 +40,14 @@ def importTrainDataset(only_test=False):
 	ntest = train_val_test_split[2]
 
 	if num_heads==1:
-		pre_filepath = "mat_files/PK11"
+		pre_filepath = "PK11"
 	elif num_heads==5:
-		pre_filepath = "mat_files/PK15689"
+		pre_filepath = "PK15689"
 	else: 
 		raise AssertionError("Unexpected num_heads.")
 
 	if only_test:
-		test = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_test.mat"))
+		test = scipy.io.loadmat(os.path.join(path,"mat_files",f"test_100/{pre_filepath}_test.mat"))
 		test["input"] = torch.tensor(test["input"][:ntest]).permute(0,3,1,2).float()	
 		if len(test["output"].shape) == 3:
 			test["output"] = torch.tensor(test["output"][:ntest])[:,None,:,:].float()
@@ -57,9 +57,9 @@ def importTrainDataset(only_test=False):
 			raise AssertionError("Unexpected shape for y.")
 		return test
 	else:
-		train = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_train.mat"))
-		val = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_val.mat"))
-		test = scipy.io.loadmat(os.path.join(path,f"mat_files/test_100/PK15689_test.mat"))
+		train = scipy.io.loadmat(os.path.join(path,"mat_files",f"{pre_filepath}_train.mat"))
+		val = scipy.io.loadmat(os.path.join(path,"mat_files",f"{pre_filepath}_val.mat"))
+		test = scipy.io.loadmat(os.path.join(path,"mat_files",f"test_100/{pre_filepath}_test.mat"))
 
 		train["input"] = torch.tensor(train["input"][:ntrain]).permute(0,3,1,2).float()
 		val["input"] = torch.tensor(val["input"][:nval]).permute(0,3,1,2).float()
