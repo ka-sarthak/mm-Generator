@@ -9,7 +9,7 @@ from models.generator import Generator
 from models.discriminator import Discriminator
 from models.ganLoss import generatorLoss, discriminatorLoss
 from utils.config_module import config
-from utils.data_processing import makePathAndDirectories, importDataset, scaleDataset
+from utils.data_processing import makePathAndDirectories, importTrainDataset, scaleDataset
 from utils.utilities import countParameters
 from utils.postprocessing import lossPlotsGAN
 
@@ -21,7 +21,7 @@ def train():
 	path_save_model, path_training_log, path_loss_plot = makePathAndDirectories()
 	
 	## import dataset
-	train_data, val_data, _ = importDataset()
+	train_data, val_data, _ = importTrainDataset()
 
 	## get scaled dataset and trained Scaler objects
 	x_train, y_train, x_val, y_val, x_scaler, y_scaler = scaleDataset(train_data,val_data)

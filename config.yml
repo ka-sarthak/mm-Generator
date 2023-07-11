@@ -1,7 +1,7 @@
 experiment:
   name: test
   model: nonGAN                  # GAN, nonGAN
-  generator: UNet              # FNO, UNet
+  generator: FNO              # FNO, UNet
   inputHeads: 3
   outputHeads: 5
 
@@ -40,6 +40,7 @@ model:
     discriminatorVersion: UNet-enc     # UNet-enc or original or modified
     LAMBDA: 100
 
+# TODO: define metric and loss function
 training:
   continueTraining: False
   epochs: 2
@@ -54,8 +55,19 @@ training:
   stepSize: 100
 
 inference:
-  # by default, all the test cases in the data folder will be used
-  # if include is not None, only the specified tests will be used
-  # if exclude is not None, all but the specified tests will be used
-  include: None
-  exclude: None
+  # set include and exclude to null to get inference for all test cases
+  # if include is not null, only the specified tests will be used
+  # if exclude is not null, all but the specified tests will be used
+  include: 
+        - '256'
+        - '512'
+  exclude:
+        - 2048_1280grains
+
+postprocess:
+  # set include and exclude to null to get postprocess for all test cases
+  # if include is not null, only the specified tests will be used
+  # if exclude is not null, all but the specified tests will be used
+  include: null
+  exclude:
+        - 2048_1280grains

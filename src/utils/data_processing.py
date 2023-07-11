@@ -1,7 +1,7 @@
 import scipy.io
 import torch
 import os
-from utils.config_module import config
+from utils.config_module import config, configLoad
 
 def makePathAndDirectories(training=True):
 	## make paths and directories for training
@@ -27,10 +27,9 @@ def makePathAndDirectoriesTesting():
 	
 	return path_save_model, path_inference
 
-def importDataset(only_test=False):
+def importTrainDataset(only_test=False):
 	"""
-		returns dictionary of features-labels for train, val, test datasets
-		return shape: (batch,channel,height,width)
+		returns: dictionary train, val, test, each containing tensor of shape (batch,channel,height,width)
 	"""
 	path = config["path"]["trainingData"]
 	train_val_test_split = config["training"]["trainValTestSplit"]
@@ -57,7 +56,6 @@ def importDataset(only_test=False):
 		else: 
 			raise AssertionError("Unexpected shape for y.")
 		return [],[], test
-	
 	else:
 		train = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_train.mat"))
 		val = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_val.mat"))
@@ -77,7 +75,60 @@ def importDataset(only_test=False):
 			test["output"] = torch.tensor(test["output"][:ntest]).permute(0,3,1,2).float()
 		else: 
 			raise AssertionError("Unexpected shape for y.")
+		
 		return train, val, test
+
+def importTestDataset(ntest=10):
+	"""
+		returns list of testcase types, each of which is a dict containing test cases
+		return shape: list({input: [batch,channel,height,width], output: [batch,channel,height,width]}, ...)
+	"""
+	cases_paths = generateDataList(task = "inference")
+	num_heads = config["experiment"]["outputHeads"]
+
+	if num_heads==1:
+		pre_filepath = "mat_files/PK11"
+	elif num_heads==5:
+		pre_filepath = "mat_files/PK15689"
+	else: 
+		raise AssertionError("Unexpected num_heads.")
+
+	data = []
+	for path in cases_paths:
+		test = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_test.mat"))
+
+		test["input"] = torch.tensor(test["input"][:ntest]).permute(0,3,1,2).float()	
+		if len(test["output"].shape) == 3:
+			test["output"] = torch.tensor(test["output"][:ntest])[:,None,:,:].float()
+		elif len(test["output"].shape) == 4:
+			test["output"] = torch.tensor(test["output"][:ntest]).permute(0,3,1,2).float()
+		else: 
+			raise AssertionError("Unexpected shape for y.")
+		
+		data.append(test)
+		
+	return data
+
+def generateDataList(task = "inference"):
+	if task ==	"inference":
+		cases		=	filterPaths(config["path"]["testingData"],config["inference"]["include"],config["inference"]["exclude"])
+	elif task == "train":
+		raise AssertionError("Feature not implemented.")
+	elif task == "postprocess":
+		cases		=	filterPaths(config["path"]["testingData"],config["postprocess"]["include"],config["postprocess"]["exclude"])
+	else:
+		raise AssertionError("Unexpected argument for task.")
+	
+	return cases
+ 
+def filterPaths(dataPath,include,exclude):
+	paths = set(os.listdir(dataPath))
+	if include is not None:
+		paths = paths.intersection(set(include))
+	if exclude is not None:
+		paths = paths.difference(set(exclude))
+	
+	return [os.path.join(dataPath,path,"") for path in list(paths)]
 
 def scaleDataset(train_data, val_data):
 		## define normalizers based on training data
@@ -137,3 +188,7 @@ class MinMaxScaling():
 		for i in range(len(self.min)):
 			z[:,i,:,:] = (x[:,i,:,:] * (self.max[i] - self.min[i])) +  self.min[i]
 		return z
+
+if __name__=="__main__":
+	configLoad("../config.yml")
+	importTestDataset()
