@@ -1,5 +1,6 @@
 # project specific
 training_log/
+inferences/
 saved_models/
 debugTest.py
 training_output/

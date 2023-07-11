@@ -55,7 +55,7 @@ def importTrainDataset(only_test=False):
 			test["output"] = torch.tensor(test["output"][:ntest]).permute(0,3,1,2).float()
 		else: 
 			raise AssertionError("Unexpected shape for y.")
-		return [],[], test
+		return test
 	else:
 		train = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_train.mat"))
 		val = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_val.mat"))
@@ -80,8 +80,8 @@ def importTrainDataset(only_test=False):
 
 def importTestDataset(ntest=10):
 	"""
-		returns list of testcase types, each of which is a dict containing test cases
-		return shape: list({input: [batch,channel,height,width], output: [batch,channel,height,width]}, ...)
+		returns dict of testcase types, each of which is a dict containing test cases
+		return shape: dict({input: [batch,channel,height,width], output: [batch,channel,height,width]}, ...)
 	"""
 	cases_paths = generateDataList(task = "inference")
 	num_heads = config["experiment"]["outputHeads"]
@@ -93,7 +93,7 @@ def importTestDataset(ntest=10):
 	else: 
 		raise AssertionError("Unexpected num_heads.")
 
-	data = []
+	data = {}
 	for path in cases_paths:
 		test = scipy.io.loadmat(os.path.join(path,f"{pre_filepath}_test.mat"))
 
@@ -105,8 +105,9 @@ def importTestDataset(ntest=10):
 		else: 
 			raise AssertionError("Unexpected shape for y.")
 		
-		data.append(test)
-		
+		case_name = path.split("/")[-2]
+		data[case_name] = test
+
 	return data
 
 def generateDataList(task = "inference"):
