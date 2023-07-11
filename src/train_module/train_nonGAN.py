@@ -19,7 +19,9 @@ def train():
 	train_data, val_data, _ = importTrainDataset()
 	
 	## get scaled dataset and trained Scaler objects
-	x_train, y_train, x_val, y_val, x_scaler, y_scaler = scaleDataset(train_data,val_data)
+	x_train, y_train, x_scaler, y_scaler = scaleDataset(train_data)
+	x_val	= x_scaler.encode(val_data["input"])
+	y_val	= y_scaler.encode(val_data["output"])
 	print("Shape of the training data (X,y): ", x_train.shape, y_train.shape)
 	print("Shape of the validation data (X,y): ", x_val.shape, y_val.shape)
 

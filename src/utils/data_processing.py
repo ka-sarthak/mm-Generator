@@ -130,24 +130,22 @@ def filterPaths(dataPath,include,exclude):
 	
 	return [os.path.join(dataPath,path,"") for path in list(paths)]
 
-def scaleDataset(train_data, val_data):
+def scaleDataset(data):
 		## define normalizers based on training data
 		scalerName = config["dataProcessing"]["scaler"]
 		if scalerName == "MinMax":
-			x_normalizer = MinMaxScaling(train_data["input"])
-			y_normalizer = MinMaxScaling(train_data["output"])
+			x_normalizer = MinMaxScaling(data["input"])
+			y_normalizer = MinMaxScaling(data["output"])
 		elif scalerName == "Gaussian":
-			x_normalizer = GaussianScaling(train_data["input"])
-			y_normalizer = GaussianScaling(train_data["output"])
+			x_normalizer = GaussianScaling(data["input"])
+			y_normalizer = GaussianScaling(data["output"])
 		else:
 			raise AssertionError("Unexpected argument for scalerName.")
 
-		x_train	= x_normalizer.encode(train_data["input"])
-		y_train	= y_normalizer.encode(train_data["output"])
-		x_val	= x_normalizer.encode(val_data["input"])
-		y_val	= y_normalizer.encode(val_data["output"])
+		x_train	= x_normalizer.encode(data["input"])
+		y_train	= y_normalizer.encode(data["output"])
 
-		return x_train, y_train, x_val, y_val, x_normalizer, y_normalizer
+		return x_train, y_train, x_normalizer, y_normalizer
 
 
 class GaussianScaling():
