@@ -53,6 +53,8 @@ training:
   gamma: 0.5
   weightDecay: 0.0001
   stepSize: 100
+  lossFunction: L1      # L1 or L2
+  metric: L1            # L1 or L2
 
 inference:
   # set include and exclude to null to get inference for all test cases

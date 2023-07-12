@@ -4,7 +4,7 @@ import os, psutil
 import time
 from collections import Counter
 import json 
-from torch.nn import L1Loss
+from utils.utilities import lossFunction
 from models.generator import Generator
 from models.discriminator import Discriminator
 from models.ganLoss import generatorLoss, discriminatorLoss
@@ -24,7 +24,7 @@ def train():
 	train_data, val_data, _ = importTrainDataset()
 
 	## get scaled dataset and trained Scaler objects
-	x_train, y_train, x_scaler, y_scaler = scaleDataset(train_data,val_data)
+	x_train, y_train, x_scaler, y_scaler = scaleDataset(train_data)
 	x_val	= x_scaler.encode(val_data["input"])
 	y_val	= y_scaler.encode(val_data["output"])
 	print("Shape of the training data (X,y): ", x_train.shape, y_train.shape)
@@ -58,8 +58,7 @@ def train():
 	g_scheduler = torch.optim.lr_scheduler.StepLR(g_optimizer, step_size=training_config["stepSize"], gamma=training_config["gamma"])
 	d_optimizer = torch.optim.Adam(d_model.parameters(), lr=training_config["learningRate"], weight_decay=training_config["weightDecay"])
 	d_scheduler = torch.optim.lr_scheduler.StepLR(d_optimizer, step_size=training_config["stepSize"], gamma=training_config["gamma"])
-	Loss = L1Loss()
-	metric = L1Loss()
+	metric = lossFunction(type=config["training"]["metric"])
 
 	## load states if continued Training
 	if training_config["continueTraining"] == True:

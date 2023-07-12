@@ -1,5 +1,7 @@
 import torch
 from prettytable import PrettyTable
+from utils.config_module import config
+from torch.nn import L1Loss, MSELoss
 
 def mae(f1,f2):
 	return torch.mean(torch.abs(f1-f2))
@@ -71,3 +73,11 @@ def periodic_padding(tensor, axis, padding):
         middle = tensor
         tensor = torch.cat([right, middle, left], axis=ax)
     return tensor
+
+def lossFunction(type="L1"):
+    if type=="L1":
+        return L1Loss()
+    elif type=="L2":
+        return MSELoss()
+    else:
+        raise AssertionError("Unexpected argument for lossFunction.")

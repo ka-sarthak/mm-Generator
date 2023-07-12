@@ -2,7 +2,7 @@ import torch
 import os, psutil
 import json
 import time
-from torch.nn import L1Loss 
+from utils.utilities import lossFunction 
 from models.generator import Generator
 from utils.config_module import config
 from utils.data_processing import makePathAndDirectories, importTrainDataset, scaleDataset
@@ -47,8 +47,8 @@ def train():
 
 	g_optimizer = torch.optim.Adam(g_model.parameters(), lr=training_config["learningRate"], weight_decay=training_config["weightDecay"])
 	g_scheduler = torch.optim.lr_scheduler.StepLR(g_optimizer, step_size=training_config["stepSize"], gamma=training_config["gamma"])
-	Loss = L1Loss()
-	metric = L1Loss()
+	Loss = lossFunction(type=config["training"]["lossFunction"])
+	metric = lossFunction(type=config["training"]["metric"])
 	
 	## load states if continued Training
 	if training_config["continueTraining"] == True:
