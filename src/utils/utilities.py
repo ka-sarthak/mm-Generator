@@ -10,7 +10,7 @@ def nmae(f1,f2):
 	'''
 		Normalized MAE
 	'''
-	return MAE(f1,f2)/(torch.max(f1)-torch.min(f1))
+	return mae(f1,f2)/(torch.max(f1)-torch.min(f1))
 
 def argumentCheck(argv):
 	if not argv:
