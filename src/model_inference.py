@@ -1,7 +1,6 @@
 import os
 import time
 import torch
-from torch.nn import L1Loss
 from inference_module.inference import Inference
 from inference_module.postprocessing import Postprocessing
 

@@ -2,8 +2,9 @@ import os
 import time
 import torch
 import numpy as np
-from torch.nn import L1Loss
+from utils.utilities import lossFunction
 from utils.config_module import config
+from utils.logger_module import Logger
 from utils.data_processing import makePathAndDirectories, importTestDataset, importTrainDataset, scaleDataset
 from models.generator import Generator
 
@@ -39,7 +40,7 @@ class Inference:
     def _inferCaseByCase(self,case_type="interpolative"):
         '''
             generates the inference for the data case by case, while limiting number of threads to 1.
-            also records the time taken for inference
+            also records the time taken for inference and the errors generated
         '''
         
         if case_type=="interpolative":
@@ -50,26 +51,39 @@ class Inference:
                 
                 data = importTrainDataset(only_test=True)
                 x = self.x_scaler.encode(data["input"])
+                y = data["output"]
                 
                 time_list = []
+                error_list = []
+                metric = lossFunction(type=config["training"]["metric"])
                 pred = np.empty(data["output"].shape)
                 for case_idx in range(len(x)):
                     start = time.time()
                     _pred = self.g_model(x[case_idx][None,:,:,:]).detach()
-                    _pred = self.y_scaler.decode(_pred).numpy()
+                    _pred = self.y_scaler.decode(_pred).squeeze()
                     end   = time.time()
-                    time_list.append(end-start)
-                    pred[case_idx] = _pred.squeeze()
+                    error = [metric(y[case_idx][i],_pred[i]).item()/1e6 for i in range(len(_pred))]
+
+                    time_list.append([case_idx+1, round(end-start,6)])
+                    error_list.append([case_idx+1]+error)
+                
+                    pred[case_idx] = _pred.numpy()
                 
                 case_path = os.path.join(self.path_inference,case_type)
                 os.makedirs(case_path,exist_ok=True)
                 
-                np.save(os.path.join(case_path,"pred.npy"),pred)
-                with open(os.path.join(case_path,"time_recording.out"),"w") as f:
-                    for i,t in enumerate(time_list):
-                        f.write(f"{i+1}:\t\t{t}\n")
-                    f.write(f"\nAverage time: {sum(time_list)/len(time_list)}")
+                avg_time = np.mean(np.array(time_list)[:,1:],axis=0)[0]    
+                avg_error_list = list(np.mean(np.array(error_list)[:,1:],axis=0))
                 
+                logger = Logger(os.path.join(case_path,"inference.log"))
+                logger.addTable(time_list,"Time taken (sec) per inference using 1 thread")
+                logger.addLine(f"Average time (sec): {np.round(avg_time,6)}")
+                logger.addTable(error_list,f"Aggregated error (MPa) using {config['training']['metric']} metric for {config['experiment']['outputHeads']} component(s)")
+                logger.addLine(f"Average aggregate error (MPa):")
+                logger.addRow(avg_error_list)
+                logger.close()
+                
+                np.save(os.path.join(case_path,"pred.npy"),np.array(pred))
                 print(f"... {case_type} done")
         
                 ## reset the number of threads to initial value
