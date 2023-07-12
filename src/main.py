@@ -1,7 +1,7 @@
 import sys
 from utils.config_module import configLoad
-from model_train import train
-from model_inference import inference
+from tasks.model_train import train
+from tasks.model_inference import inference
 
 if __name__ == "__main__":
 	# initialize the config
