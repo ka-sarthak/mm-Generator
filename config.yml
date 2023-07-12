@@ -66,10 +66,13 @@ inference:
   exclude:
         - 2048_1280grains
 
-postprocess:
+postprocessing:
   # set include and exclude to null to get postprocess for all test cases
   # if include is not null, only the specified tests will be used
   # if exclude is not null, all but the specified tests will be used
-  include: null
+  include:
+        - '256'
+        - '512'
   exclude:
         - 2048_1280grains
+  functions: null

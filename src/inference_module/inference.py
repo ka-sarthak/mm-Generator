@@ -7,6 +7,7 @@ from utils.config_module import config
 from utils.logger_module import Logger
 from utils.data_processing import makePathAndDirectories, importTestDataset, importTrainDataset, scaleDataset
 from models.generator import Generator
+from inference_module.postprocessing import Postprocessing
 
 class Inference:
     def __init__(self):
@@ -32,7 +33,6 @@ class Inference:
         ## putting inferCaseByCase after other inferences because once num_threads is set to 1,
         ## PyTorch doesn't let to set is back to other number for native parallel backend.
         if interpolative:
-            print("Inferring for interpolative test case ...")
             self._inferCaseByCase(case_type="interpolative")
         
         print("Inference completed.")
@@ -45,6 +45,8 @@ class Inference:
         
         if case_type=="interpolative":
             if self.isInferenceNotExist(case_type):
+                print("Inferring for interpolative test case ...")
+                
                 ## set the number of threads to 1
                 threads_initial = torch.get_num_threads()
                 torch.set_num_threads(1)
@@ -84,11 +86,14 @@ class Inference:
                 logger.close()
                 
                 np.save(os.path.join(case_path,"pred.npy"),np.array(pred))
+                np.save(os.path.join(case_path,"true.npy"),np.array(y.numpy()))
                 print(f"... {case_type} done")
         
                 ## reset the number of threads to initial value
                 torch.set_num_threads(threads_initial)
-        
+            else:
+                print("Inferring for interpolative test case already done.")
+                
         else:
             # TODO add the support for inferring case by case for other test case types
             raise AssertionError("Feature not supported yet.")
@@ -100,12 +105,15 @@ class Inference:
         '''
         data = self.data[case_type]
         x = self.x_scaler.encode(data["input"])
+        y = data["output"]
+        
         pred = self.g_model(x).detach()
         pred = self.y_scaler.decode(pred).numpy()
         
         case_path = os.path.join(self.path_inference,case_type)
         os.makedirs(case_path,exist_ok=True)
         np.save(os.path.join(case_path,"pred.npy"),pred)
+        np.save(os.path.join(case_path,"true.npy"),y.numpy())
         print(f"... {case_type} done")
             
     def loadData(self):
@@ -136,9 +144,13 @@ class Inference:
         return False
     
     def postprocessInferences(self):
-        # TODO
-        raise AssertionError("Feature not supported yet.")
-
+        '''
+            initialize an Postprocessing object, which goes over all the existing inferences, 
+            filters them based on config, and computes the postprocessing results for the functions
+            based on config.
+        '''
+        processor = Postprocessing(self.path_inference)
+        processor.processData()
     
     def makePathAndDirectories(self):
         self.path_save_model, self.path_inference = makePathAndDirectories(training=False)
