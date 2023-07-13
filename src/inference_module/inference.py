@@ -117,7 +117,7 @@ class Inference:
         print(f"... {case_type} done")
             
     def loadData(self):
-        self.data = importTestDataset(ntest=10)
+        self.data = importTestDataset(ntest=config["inference"]["nTest"])
     
     def nonInferredCaseTypes(self):
         '''
@@ -150,7 +150,7 @@ class Inference:
             based on config.
         '''
         processor = Postprocessing(self.path_inference)
-        processor.processData()
+        processor.processCaseTypes()
     
     def makePathAndDirectories(self):
         self.path_save_model, self.path_inference = makePathAndDirectories(training=False)

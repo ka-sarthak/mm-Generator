@@ -1,5 +1,11 @@
-import matplotlib.pyplot as plt
 import os
+import torch
+from torch.autograd import Variable
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from utils.config_module import config
 
 def lossPlots(gen_train_loss,gen_val_loss,save_path):
@@ -72,3 +78,43 @@ def lossPlotsGAN(gen_train_loss,gen_val_loss,disc_train_loss,save_path):
 	plt.legend()
 	plt.savefig(f"{save_path}/gen_val_loss.png")
 	plt.close()
+ 
+def plot(data,vmin,vmax,cmap,path_and_name):
+        '''
+            generate the plots at the plot path
+        '''
+        plt.set_cmap(cmap)
+        plt.tick_params(left=False,bottom=False,labelleft=False,labelbottom=False)
+        
+        ax = plt.subplot()
+        if vmin*vmax < 0:
+            norm = colors.TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
+            im = ax.imshow(data,norm=norm)
+        else:
+            im = ax.imshow(data,vmin=vmin,vmax=vmax)
+
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="8%", pad=0.1)
+        cbar = plt.colorbar(im, cax=cax, shrink=0.5, ticks=[vmin,0,vmax])
+        cbar.ax.set_yticklabels(['{:.1f}'.format(x) for x in cbar.get_ticks()], font="Times New Roman",fontsize=20)
+  
+        plt.savefig(f"{path_and_name}.png", format="png", dpi=300, bbox_inches=0, transparent=True)
+        plt.close()
+
+def gradientImg(img):
+	img = img.squeeze(0)
+	# ten=torch.unbind(img)
+	x=img.unsqueeze(0).unsqueeze(0)
+	
+	a=np.array([[1, 0, -1],[2,0,-2],[1,0,-1]])
+	conv1= torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
+	conv1.weight= torch.nn.Parameter(torch.from_numpy(a).float().unsqueeze(0).unsqueeze(0))
+	G_x=conv1(Variable(x)).data.view(1,x.shape[2],x.shape[3])
+
+	b=np.array([[1, 2, 1],[0,0,0],[-1,-2,-1]])
+	conv2= torch.nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
+	conv2.weight= torch.nn.Parameter(torch.from_numpy(b).float().unsqueeze(0).unsqueeze(0))
+	G_y=conv2(Variable(x)).data.view(1,x.shape[2],x.shape[3])
+
+	G=torch.sqrt(torch.pow(G_x,2)+ torch.pow(G_y,2))
+	return G

@@ -60,6 +60,7 @@ inference:
   # set include and exclude to null to get inference for all test cases
   # if include is not null, only the specified tests will be used
   # if exclude is not null, all but the specified tests will be used
+  nTest: 10 
   include: 
         - '256'
         - '512'
@@ -72,7 +73,10 @@ postprocessing:
   # if exclude is not null, all but the specified tests will be used
   include:
         - '256'
-        - '512'
+        # - '512'
   exclude:
         - 2048_1280grains
   functions: null
+  plotFieldCMap: viridis
+  plotErrorFieldCMap: seismic
+  plotGradientFieldCMap: Reds
