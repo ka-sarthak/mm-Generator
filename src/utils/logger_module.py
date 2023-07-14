@@ -1,8 +1,11 @@
 import datetime
 
 class Logger():
-    def __init__(self,filename):
-        self.file = open(filename,"w")
+    def __init__(self,filename,overwrite=True):
+        if overwrite:
+            self.file = open(filename,"w")
+        else:
+            self.file = open(filename,"a")
         self.startTime = datetime.datetime.now()
         self.addLine(f"Starting the log")
         
@@ -28,6 +31,6 @@ class Logger():
         
     def close(self):
         self.endTime = datetime.datetime.now()
-        self.addLine(f"Ending the log - Logged for {round(self.endTime.timestamp()-self.startTime.timestamp(),6)} seconds")
+        self.addLine(f"Ending the log - Logged for {round(self.endTime.timestamp()-self.startTime.timestamp(),6)} seconds\n")
         self.file.close()
         

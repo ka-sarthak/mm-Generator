@@ -63,7 +63,7 @@ inference:
   nTest: 10 
   include: 
         - '256'
-        - '512'
+        # - '512'
   exclude:
         - 2048_1280grains
 
@@ -76,7 +76,18 @@ postprocessing:
         # - '512'
   exclude:
         - 2048_1280grains
-  functions: null
+  functions:
+        # - plotFields
+        - plotValueHistograms
+        - aggregatedError
+        # - plotErrorFields
+        - plotMeanErrorFields
+        - plotErrorHistograms
+        # - gradientFieldsTRUE
+        # - gradientFieldsPRED
+        - mechEquilibriumCondition
+        - periodicityCondition
   plotFieldCMap: viridis
   plotErrorFieldCMap: seismic
   plotGradientFieldCMap: Reds
+  overwriteLogger: False

@@ -28,16 +28,34 @@ class Postprocessing(object):
         '''
             applies each of the processing function
         '''
-        self.logger = Logger(os.path.join(self.path,self.caseTypePath,"postprocessing.log"))
+        self.logger = Logger(os.path.join(self.path,self.caseTypePath,"postprocessing.log"),config["postprocessing"]["overwriteLogger"])
+
         
-        self.aggregatedError()
-        self.plotFields()
-        self.plotErrorFields()
-        self.gradientFields(data_type="true")
-        self.gradientFields(data_type="pred")
+        if "plotFields" in self.function_list:
+            self.plotFields()
+        if "plotValueHistograms" in self.function_list:
+            self.plotValueHistograms()
+        
+        if "aggregatedError" in self.function_list:
+            self.aggregatedError()
+        if "plotErrorFields" in self.function_list:
+            self.plotErrorFields()
+        if "plotMeanErrorFields" in self.function_list:
+            self.plotMeanErrorFields()
+        if "plotErrorHistograms" in self.function_list:
+            self.plotErrorHistograms()
+        
+        if "gradientFieldsTRUE" in self.function_list:
+            self.gradientFields(data_type="true")
+        if "gradientFieldsPRED" in self.function_list:
+            self.gradientFields(data_type="pred")
+        
+        if "mechEquilibriumCondition" in self.function_list:
+            self.mechEquilibriumCondition()
+        if "periodicityCondition" in self.function_list:
+            self.periodicityCondition()
         
         self.logger.close()
-        
     
     def aggregatedError(self):
         '''
@@ -60,6 +78,8 @@ class Postprocessing(object):
         self.logger.addRow(mae_per_caseType)
         self.logger.addLine(f"NMAE averaged over {self.pred.shape[0]} cases (%):")
         self.logger.addRow(nmae_per_caseType*100.0)
+
+        print("... aggregatedError done")
     
     def plotFields(self):
         '''
@@ -82,6 +102,8 @@ class Postprocessing(object):
                 plot(data=self.pred[case_idx,comp_idx,:,:],vmin=vmin,vmax=vmax,
                      cmap=plot_cmap,path_and_name=os.path.join(plot_path,f"{case_idx+1}_pred_{comp_idx+1}"))
         
+        print("... plotFields done")
+        
     def plotErrorFields(self):
         '''
             plots the field for all the components individually,
@@ -99,7 +121,8 @@ class Postprocessing(object):
                 # plot error field
                 plot(data=error,vmin=vmin,vmax=vmax,
                      cmap=plot_cmap,path_and_name=os.path.join(plot_path,f"{case_idx+1}_error_{comp_idx+1}"))
-                
+        
+        print("... plotErrorFields done")        
     
     def gradientFields(self,data_type="pred"):
         '''
@@ -138,7 +161,29 @@ class Postprocessing(object):
         self.logger.addRow(cases_grad_mean)
         self.logger.addLine(f"Gradient image standard deviation averaged over {data.shape[0]} {data_type} cases:")
         self.logger.addRow(cases_grad_std)
+
+        print(f"... gradientFields{data_type.upper()} done")
         
+    def periodicityCondition(self):
+        # TODO
+        pass
+        
+    def mechEquilibriumCondition(self):
+        # TODO
+        pass
+    
+    def plotMeanErrorFields(self):
+        # TODO
+        pass
+    
+    def plotErrorHistograms(self):
+        # TODO
+        pass
+    
+    def plotValueHistograms(self):
+        # TODO
+        pass
+       
     def getCaseTypeData(self):
         '''
             returns the saved data if found, else raises error 
