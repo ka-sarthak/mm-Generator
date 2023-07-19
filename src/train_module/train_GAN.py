@@ -139,8 +139,8 @@ def train():
 			loss 	+= metric(g_output,target).item()/1e6
 		g_loss_validation.append( loss/len(val_loader))
 
-		logfile.write(f"\nEpoch: {ep} \t Time(s): {t2-t1} \t g_train_loss: {g_loss_epoch['total_loss']} \t d_train_loss: {d_loss_epoch['total_loss']} \t g_val_loss: {g_loss_validation[-1]}")
-		print(f"{ep} \t t: {t2-t1} \t g_train_loss: {g_loss_epoch['total_loss']} \t d_train_loss: {d_loss_epoch['total_loss']} \t g_val_loss: {g_loss_validation[-1]} \t MEM:{round(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 3,2)} GB", flush=True)
+		logfile.write(f"\nEpoch: {ep} \t Time(s): {int(t2-t1)} \t g_train_loss: {g_loss_epoch['total_loss']} \t d_train_loss: {d_loss_epoch['total_loss']} \t g_val_loss: {g_loss_validation[-1]}")
+		print(f"{ep} \t t: {int(t2-t1)} \t g_train_loss: {g_loss_epoch['total_loss']} \t d_train_loss: {d_loss_epoch['total_loss']} \t g_val_loss: {g_loss_validation[-1]} \t MEM:{round(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 3,2)} GB", flush=True)
 		
 		ep+=1
 

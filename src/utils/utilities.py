@@ -40,9 +40,11 @@ def countParameters(model,logfile=None):
 		if logfile:
 			logfile.write(str(table))
 			logfile.write("\nTotal Trainable Params: " + "{:,}".format(total_params))
+			logfile.write("\n\n")
 		else:
 			print(table)
 			print("Total Trainable Params: ", "{:,}".format(total_params))
+			print("\n\n")
 		return total_params
 
 def periodic_padding(tensor, axis, padding):
