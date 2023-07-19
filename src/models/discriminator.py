@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.UNet import UNet
+from models.UNet import UNet_standard
 from utils.layers import PeriodicSeparableConv, SeparableConv
 from utils.config_module import config
 
@@ -21,7 +21,12 @@ class Discriminator(nn.Module):
 		self.version = config["model"]["GAN"]["discriminatorVersion"]
 		num_heads = config["experiment"]["outputHeads"]
 		
-		if self.version == "UNet-enc":
+		if self.version == "UNet":
+			in_channels = config["experiment"]["inputHeads"] + num_heads
+			kernel = config["model"]["UNet"]["kernel"]
+			self.network = UNet_standard(kernel=kernel,in_channels=in_channels,out_channels=1)
+   
+		elif self.version == "UNet-enc":
 			in_channels = config["experiment"]["inputHeads"] + num_heads
 			enc_channels = config["model"]["UNet"]["encChannels"]
 			kernel = config["model"]["UNet"]["kernel"]
@@ -62,7 +67,11 @@ class Discriminator(nn.Module):
 	def forward(self,inp,target):
 		tmp = torch.cat((inp,target),dim=-3)		## (3x256x256),(5x256x256)-->(8x256x256)
 
-		if self.version == "UNet-enc":
+		if self.version == "UNet":
+			tmp = self.network(tmp)
+			tmp = torch.sigmoid(tmp)
+
+		elif self.version == "UNet-enc":
 			tmp = self.Enc0(tmp)
 			tmp = self.Enc1(tmp)
 			tmp = self.Enc2(tmp)
