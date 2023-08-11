@@ -92,7 +92,7 @@ def train():
 			g_model.eval()
 			d_model.train()
 			d_optimizer.zero_grad()
-			generated_fake 			= g_model(batch_x)
+			generated_fake 			= g_model(batch_x).detach()
 			d_output_generated_fake = d_model(batch_x,generated_fake)
 			d_output_real 			= d_model(batch_x,batch_target)
 			d_loss 					= discriminatorLoss(d_output_generated_fake,d_output_real)
