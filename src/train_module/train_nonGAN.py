@@ -8,6 +8,7 @@ from utils.config_module import config
 from utils.data_processing import makePathAndDirectories, importTrainDataset, scaleDataset
 from utils.utilities import countParameters
 from utils.postprocessing import lossPlots
+from utils.probe_fourier_modes import probeFourierModes
 
 def train():
 	## configs and paths
@@ -101,6 +102,7 @@ def train():
 		print(f"{ep} \t t:{t2-t1} \t g_train_loss:{g_loss_epoch} \t g_val_loss:{g_loss_validation[-1]} \t MEM:{round(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 3,2)} GB", flush=True)
 		
 		ep+=1
+		probeFourierModes.setEpoch(ep)
 
 	## save the model and generate loss plots
 	g_model.train()

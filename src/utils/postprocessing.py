@@ -100,6 +100,27 @@ def plot(data,vmin,vmax,cmap,path_and_name):
   
         plt.savefig(f"{path_and_name}.png", format="png", dpi=300, bbox_inches=0, transparent=True)
         plt.close()
+        
+def plotAllChannels(data,cmap,path_and_name,rescaling):
+    '''
+		Given the data with channels c, such that the dimensions are (c,w,h),
+		plot the subplots containing a matrix of plots for each channel
+		Remark: a subplot will be empty and transparent if all the values are same (most probably 0)
+    '''
+    cols = 6
+    rows = int(np.ceil(data.shape[0]/cols))
+    plt.figure(figsize=(cols*2,rows*2))
+    
+    for i, channel in enumerate(data):
+        if rescaling == True:
+            channel = (channel-torch.min(channel))/(torch.max(channel)-torch.min(channel))
+        plt.subplot(rows,cols,i+1)
+        plt.tick_params(left=False,bottom=False,labelleft=False,labelbottom=False)
+        plt.imshow(channel,vmin=torch.min(channel),vmax=torch.max(channel),cmap=cmap)
+    
+    plt.tight_layout(pad=0,h_pad=0,w_pad=0)
+    plt.savefig(f"{path_and_name}.png", format="png", dpi=500, bbox_inches=0, transparent=True)
+    plt.close()
 
 def gradientImg(img):
 	img = img.squeeze(0)

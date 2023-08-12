@@ -1,51 +1,53 @@
 import torch
 import torch.nn as nn
 from utils.utilities import periodic_padding
+from utils.config_module import config
+from utils.probe_fourier_modes import probeFourierModes
 
 class PeriodicConv(nn.Module):
-	def __init__(self, in_channels, out_channels, kernel):
-		super().__init__()
-		self.conv = nn.Conv2d(in_channels,out_channels,kernel,padding="valid")
-		self.padding = int((kernel-1)/2)
-	
-	def forward(self, x):
-		x = periodic_padding(x,[2,3],[self.padding,self.padding])
-		return self.conv(x)
+    def __init__(self, in_channels, out_channels, kernel):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels,out_channels,kernel,padding="valid")
+        self.padding = int((kernel-1)/2)
+    
+    def forward(self, x):
+        x = periodic_padding(x,[2,3],[self.padding,self.padding])
+        return self.conv(x)
 
 
 class PeriodicSeparableConv(nn.Module):
-	"""
-		first convolution done individually over all channels
-		second convolution is 1x1 convolution, which convolves at same spatial position for all channels 
-	"""
-	def __init__(self, in_channels, out_channels, kernel):
-		super().__init__()
-		# self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,groups=in_channels,padding="same",bias=False)
-		# self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,padding="same")
-		self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,groups=in_channels,padding="valid",bias=False)
-		self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,padding="valid")
-		self.padding = int((kernel-1)/2)
-	
-	def forward(self, x):
-		x = periodic_padding(x,[2,3],[self.padding,self.padding])
-		return self.convDepthwise(self.convSpatial(x))
+    """
+        first convolution done individually over all channels
+        second convolution is 1x1 convolution, which convolves at same spatial position for all channels 
+    """
+    def __init__(self, in_channels, out_channels, kernel):
+        super().__init__()
+        # self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,groups=in_channels,padding="same",bias=False)
+        # self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,padding="same")
+        self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,groups=in_channels,padding="valid",bias=False)
+        self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,padding="valid")
+        self.padding = int((kernel-1)/2)
+    
+    def forward(self, x):
+        x = periodic_padding(x,[2,3],[self.padding,self.padding])
+        return self.convDepthwise(self.convSpatial(x))
 
 class SeparableConv(nn.Module):
-	"""
-		first convolution done individually over all channels
-		second convolution is 1x1 convolution, which convolves at same spatial position for all channels 
-	"""
-	def __init__(self, in_channels, out_channels, kernel, stride):
-		super().__init__()
-		self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,stride=stride,padding="valid",groups=in_channels,bias=False)
-		self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,     stride=stride,padding="valid")
-	
-	def forward(self, x):
-		return self.convDepthwise(self.convSpatial(x))
+    """
+        first convolution done individually over all channels
+        second convolution is 1x1 convolution, which convolves at same spatial position for all channels 
+    """
+    def __init__(self, in_channels, out_channels, kernel, stride):
+        super().__init__()
+        self.convSpatial   = nn.Conv2d(in_channels,in_channels ,kernel_size=kernel,stride=stride,padding="valid",groups=in_channels,bias=False)
+        self.convDepthwise = nn.Conv2d(in_channels,out_channels,kernel_size=1,     stride=stride,padding="valid")
+    
+    def forward(self, x):
+        return self.convDepthwise(self.convSpatial(x))
 
 class SpectralConv2d(nn.Module):
     """
-	Taken from FNO paper.
+    Taken from FNO paper.
     2D Fourier layer. It does FFT, linear transform, and Inverse FFT.    
     """
     def __init__(self, in_channels, out_channels, modes1, modes2):
@@ -66,8 +68,12 @@ class SpectralConv2d(nn.Module):
 
     def forward(self, x):
         batchsize = x.shape[0]
-        #Compute Fourier coeffcients up to factor of e^(- something constant)
+        # Compute Fourier coeffcients up to factor of e^(- something constant)
         x_ft = torch.fft.rfft2(x)
+
+        # determine the Fourier modes
+        if not self.training and config["model"]["FNO"]["probeFourierModes"]: 
+            probeFourierModes.evaluate(x_ft.detach())
 
         # Multiply relevant Fourier modes
         out_ft = torch.zeros(batchsize, self.out_channels,  x.size(-2), x.size(-1)//2 + 1, dtype=torch.cfloat, device=x.device)

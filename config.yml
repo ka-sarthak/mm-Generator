@@ -6,7 +6,7 @@ experiment:
   outputHeads: 5
 
 path:
-  trainingData: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/256
+  trainingData: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/64
   testingData: /Users/kapoor/Articles/article1_FNO_UNet/data/elasto_plastic/testing
   saveModel: /Users/kapoor/Articles/githubGAN/mmGAN/saved_models
   inference: /Users/kapoor/Articles/githubGAN/mmGAN/inferences
@@ -35,25 +35,26 @@ model:
     modes1: 20
     modes2: 20
     width: 32
+    probeFourierModes: True
 
   GAN: 
-    discriminatorVersion: UNet-enc     # UNet-enc or original or modified
+    discriminatorVersion: UNet     # UNet-enc or original or modified
     LAMBDA: 100
 
 # TODO: define metric and loss function
 training:
   continueTraining: False
-  epochs: 2
+  epochs: 3
   trainValTestSplit:
-                  - 8
+                  - 800
                   - 100
                   - 100
-  batchSize: 2
+  batchSize: 16
   learningRate: 0.001
   gamma: 0.5
   weightDecay: 0.0001
   stepSize: 100
-  lossFunction: L1      # L1 or L2
+  lossFunction: L1      # L1 or L2 or normalDist
   metric: L1            # L1 or L2
 
 inference:

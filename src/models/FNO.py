@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils.layers import SpectralConv2d
 from utils.config_module import config
+from utils.probe_fourier_modes import probeFourierModes
 
 class FNO(nn.Module):
     '''
@@ -94,6 +95,9 @@ class FNOBlock2d(nn.Module):
         x = self.fc2(x)
         x = x.permute(0, 3, 1, 2)
 
+        if config["model"]["FNO"]["probeFourierModes"] and not self.training:
+            probeFourierModes.flush()
+            
         return x
 
 class FNOBlock2d_from_thirdFL(nn.Module):
