@@ -36,6 +36,7 @@ def train():
 		epoch_completed   = gcheckpoint["epoch_completed"]
 		g_loss_training   = gcheckpoint["training_loss"]
 		g_loss_validation = gcheckpoint["validation_loss"]
+		probeFourierModes.setData(gcheckpoint["probeFourierModes_data"])
 		logfile = open(path_training_log + "training.log", "a")
 	else:
 		epoch_completed = 0
@@ -66,6 +67,7 @@ def train():
 	
 	## training loop
 	ep = epoch_completed + 1
+	probeFourierModes.startCollection(epoch=ep)
 	while(ep <= training_config["epochs"] + epoch_completed):
 		g_model.train()
 
@@ -102,8 +104,9 @@ def train():
 		print(f"{ep} \t t:{t2-t1} \t g_train_loss:{g_loss_epoch} \t g_val_loss:{g_loss_validation[-1]} \t MEM:{round(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 3,2)} GB", flush=True)
 		
 		ep+=1
-		probeFourierModes.setEpoch(ep)
+		probeFourierModes.epochCompleted()
 
+	probeFourierModes.stopCollection()
 	## save the model and generate loss plots
 	g_model.train()
 	torch.save(
@@ -113,7 +116,8 @@ def train():
 			'optimizer_state_dict': g_optimizer.state_dict(),
 			'scheduler_state_dict': g_scheduler.state_dict(),
 			'training_loss': g_loss_training,
-			'validation_loss': g_loss_validation
+			'validation_loss': g_loss_validation,
+			'probeFourierModes_data': probeFourierModes.getData()
 		},
 		path_save_model+f"generator.pt")
 	lossPlots(g_loss_training,g_loss_validation,path_loss_plot)

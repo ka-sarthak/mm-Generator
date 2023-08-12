@@ -73,7 +73,8 @@ class SpectralConv2d(nn.Module):
 
         # determine the Fourier modes
         if not self.training and config["model"]["FNO"]["probeFourierModes"]: 
-            probeFourierModes.evaluate(x_ft.detach())
+            probe_x = x_ft.detach().abs().numpy()
+            probeFourierModes.collectData(probe_x)
 
         # Multiply relevant Fourier modes
         out_ft = torch.zeros(batchsize, self.out_channels,  x.size(-2), x.size(-1)//2 + 1, dtype=torch.cfloat, device=x.device)

@@ -113,10 +113,10 @@ def plotAllChannels(data,cmap,path_and_name,rescaling):
     
     for i, channel in enumerate(data):
         if rescaling == True:
-            channel = (channel-torch.min(channel))/(torch.max(channel)-torch.min(channel))
+            channel = (channel-np.min(channel))/(np.max(channel)-np.min(channel))
         plt.subplot(rows,cols,i+1)
         plt.tick_params(left=False,bottom=False,labelleft=False,labelbottom=False)
-        plt.imshow(channel,vmin=torch.min(channel),vmax=torch.max(channel),cmap=cmap)
+        plt.imshow(channel,vmin=np.min(channel),vmax=np.max(channel),cmap=cmap)
     
     plt.tight_layout(pad=0,h_pad=0,w_pad=0)
     plt.savefig(f"{path_and_name}.png", format="png", dpi=500, bbox_inches=0, transparent=True)
