@@ -44,7 +44,8 @@ class ProbeFourierModes():
         self.layer += 1
              
     def epochCompleted(self):
-        self.data[self.epoch] = self.epochData
+        if self.epoch%20 == 0:
+            self.data[self.epoch] = self.epochData
         self.layer = 1
         self.epoch += 1
         

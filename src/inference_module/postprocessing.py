@@ -1,5 +1,7 @@
 import os
 import torch
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import numpy as np
 from utils.config_module import config
 from utils.data_processing import filterPaths
@@ -54,6 +56,9 @@ class Postprocessing(object):
             self.mechEquilibriumCondition()
         if "periodicityCondition" in self.function_list:
             self.periodicityCondition()
+            
+        if "FourierAnalysis" in self.function_list:
+            self.FourierAnalysis()
         
         self.logger.close()
     
@@ -164,6 +169,104 @@ class Postprocessing(object):
 
         print(f"... gradientFields{data_type.upper()} done")
         
+    def FourierAnalysis(self):
+        plot_path = os.path.join(self.caseTypePath,"plot_Fourier_analysis","")
+        os.makedirs(plot_path,exist_ok=True)
+        
+        ## 1D FT
+        for comp, (comp_pred, comp_true) in enumerate(zip(np.moveaxis(self.pred,0,1),np.moveaxis(self.true,0,1))):
+                plt.figure(figsize=(10,5))
+                plt.subplot(1,2,1)
+                plt.semilogy(np.mean(np.mean(np.abs(np.fft.rfft(comp_true,axis=1)),axis=2),axis=0),label="reference")
+                plt.semilogy(np.mean(np.mean(np.abs(np.fft.rfft(comp_pred,axis=1)),axis=2),axis=0),label="predicted")
+                plt.xlabel("Wavenumber")
+                plt.ylabel("Energy")
+                plt.title(f"FT magnitudes of rows \naveraged over cols and {comp_true.shape[0]} test cases")
+                plt.subplot(1,2,2)
+                plt.semilogy(np.mean(np.mean(np.abs(np.fft.rfft(comp_true,axis=2)),axis=1),axis=0),label="reference")
+                plt.semilogy(np.mean(np.mean(np.abs(np.fft.rfft(comp_pred,axis=2)),axis=1),axis=0),label="predicted")
+                plt.xlabel("Wavenumber")
+                plt.title(f"FT magnitudes of cols \naveraged over rows and {comp_true.shape[0]} test cases")
+                plt.tight_layout()
+                plt.legend()
+                plt.savefig(os.path.join(plot_path,f"log_all_{comp+1}.png"),dpi=300,transparent=True)
+                
+                plt.clf()
+                plt.subplot(1,2,1)
+                plt.plot(np.mean(np.mean(np.abs(np.fft.rfft(comp_true,axis=1)),axis=2),axis=0),label="reference")
+                plt.plot(np.mean(np.mean(np.abs(np.fft.rfft(comp_pred,axis=1)),axis=2),axis=0),label="predicted")
+                plt.xlabel("Wavenumber")
+                plt.ylabel("Energy")
+                plt.title(f"FT magnitudes of rows \naveraged over cols and {comp_true.shape[0]} test cases")
+                plt.subplot(1,2,2)
+                plt.plot(np.mean(np.mean(np.abs(np.fft.rfft(comp_true,axis=2)),axis=1),axis=0),label="reference")
+                plt.plot(np.mean(np.mean(np.abs(np.fft.rfft(comp_pred,axis=2)),axis=1),axis=0),label="predicted")
+                plt.xlabel("Wavenumber")
+                plt.title(f"FT magnitudes of cols \naveraged over rows and {comp_true.shape[0]} test cases")
+                plt.tight_layout()
+                plt.legend()
+                plt.savefig(os.path.join(plot_path,f"all_{comp+1}.png"),dpi=300,transparent=True)
+                plt.close()
+        
+        ## 2D FT      
+        for comp, (comp_pred, comp_true) in enumerate(zip(np.moveaxis(self.pred,0,1),np.moveaxis(self.true,0,1))):
+                plt.figure(figsize=(5,5))
+                ft = np.abs(np.fft.rfft2(comp_true))
+                ft = np.mean(ft,axis=0)
+                vmin=np.min(ft)
+                vmax=np.max(ft)
+                plt.imshow(ft,vmin=vmin,vmax=vmax,cmap="Greys")
+                plt.colorbar()
+                plt.title(f"2D FT \naveraged over {comp_true.shape[0]} test cases.")
+                plt.savefig(os.path.join(plot_path,f"2d_true_all_{comp+1}.png"),dpi=300,transparent=True)
+                
+                plt.clf()
+                ft = np.abs(np.fft.rfft2(comp_pred))
+                ft = np.mean(ft,axis=0)
+                plt.imshow(ft,vmin=vmin,vmax=vmax,cmap="Greys")
+                plt.colorbar()
+                plt.title(f"2D FT \naveraged over {comp_pred.shape[0]} test cases.")
+                plt.savefig(os.path.join(plot_path,f"2d_pred_all_{comp+1}.png"),dpi=300,transparent=True)
+                
+                plt.clf()
+                ft = np.abs(np.fft.rfft2(comp_true))
+                ft = np.mean(ft,axis=0)
+                plt.imshow(ft,norm=colors.LogNorm(vmin=vmin,vmax=vmax),cmap="Greys")
+                plt.colorbar()
+                plt.title(f"2D FT \naveraged over {comp_true.shape[0]} test cases.")
+                plt.savefig(os.path.join(plot_path,f"2d_true_log_all_{comp+1}.png"),dpi=300,transparent=True)
+                
+                plt.clf()
+                ft = np.abs(np.fft.rfft2(comp_pred))
+                ft = np.mean(ft,axis=0)
+                plt.imshow(ft,norm=colors.LogNorm(vmin=vmin,vmax=vmax),cmap="Greys")
+                plt.colorbar()
+                plt.title(f"2D FT \naveraged over {comp_pred.shape[0]} test cases.")
+                plt.savefig(os.path.join(plot_path,f"2d_pred_log_all_{comp+1}.png"),dpi=300,transparent=True)
+                plt.close()
+        
+        ## 2D FT discrepancies
+        for comp, (comp_pred, comp_true) in enumerate(zip(np.moveaxis(self.pred,0,1),np.moveaxis(self.true,0,1))):
+                plt.figure(figsize=(5,5))
+                
+                # discrepancy = np.abs(np.abs(np.fft.rfft2(comp_true))-np.abs(np.fft.rfft2(comp_pred)))
+                discrepancy = np.abs( (np.abs(np.fft.rfft2(comp_true))-np.abs(np.fft.rfft2(comp_pred))) / np.abs(np.fft.rfft2(comp_true)) )
+                mean_discrepancy = np.mean(discrepancy,axis=0)
+                plt.imshow(mean_discrepancy,vmin=np.min(mean_discrepancy),vmax=np.max(mean_discrepancy),cmap="Greys")
+                plt.colorbar()
+                plt.title(f"Relative discrepancy in 2D FT \naveraged over {comp_true.shape[0]} test cases.")
+                plt.savefig(os.path.join(plot_path,f"2d_all_{comp+1}.png"),dpi=300,transparent=True)
+                
+                plt.clf()
+                # discrepancy = np.abs(np.abs(np.fft.rfft2(comp_true))-np.abs(np.fft.rfft2(comp_pred)))
+                discrepancy = np.abs( (np.abs(np.fft.rfft2(comp_true))-np.abs(np.fft.rfft2(comp_pred))) / np.abs(np.fft.rfft2(comp_true)) )
+                mean_discrepancy = np.mean(discrepancy,axis=0)
+                plt.imshow(mean_discrepancy,norm=colors.LogNorm(vmin=np.min(mean_discrepancy),vmax=np.max(mean_discrepancy)),cmap="Greys")
+                plt.colorbar()
+                plt.title(f"Relative discrepancy in 2D FT \naveraged over {comp_true.shape[0]} test cases.")
+                plt.savefig(os.path.join(plot_path,f"2d_log_all_{comp+1}.png"),dpi=300,transparent=True)
+                plt.close()
+                
     def periodicityCondition(self):
         # TODO
         pass
