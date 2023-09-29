@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from utils.layers import SpectralConv2d
+from utils.layers import SpectralConv2d, SpectralConv2dDropout
 from utils.config_module import config
 
 class FNO(nn.Module):
@@ -23,6 +23,8 @@ class FNO(nn.Module):
             self.network = FNOBlock2d_from_firstFL(modes1,modes2,width,num_heads)
         elif version == "standard_from_thirdFL":
             self.network = FNOBlock2d_from_thirdFL(modes1,modes2,width,num_heads)
+        elif version == "dropout":
+            self.network = FNOBlock2d_dropout(modes1,modes2,width,num_heads)
         else:
             raise AssertionError("Unexpected FNO version.")
     
@@ -96,6 +98,17 @@ class FNOBlock2d(nn.Module):
 
         return x
 
+class FNOBlock2d_dropout(FNOBlock2d):
+    def __init__(self, modes1, modes2, width, num_heads):
+        super().__init__(modes1, modes2, width, num_heads)
+        self.conv0 = SpectralConv2dDropout(self.width, self.width, self.modes1, self.modes2, config["model"]["FNO"]["dropout"])
+        self.conv1 = SpectralConv2dDropout(self.width, self.width, self.modes1, self.modes2, config["model"]["FNO"]["dropout"])
+        self.conv2 = SpectralConv2dDropout(self.width, self.width, self.modes1, self.modes2, config["model"]["FNO"]["dropout"])
+        self.conv3 = SpectralConv2dDropout(self.width, self.width, self.modes1, self.modes2, config["model"]["FNO"]["dropout"])
+        
+    def forward(self, x):
+        return super().forward(x)
+    
 class FNOBlock2d_from_thirdFL(nn.Module):
     """
         The overall network. It contains 4 layers of the Fourier layer.

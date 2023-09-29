@@ -86,3 +86,32 @@ class SpectralConv2d(nn.Module):
         #Return to physical space
         x = torch.fft.irfft2(out_ft, s=( x.size(-2), x.size(-1)))
         return x
+
+class SpectralConv2dDropout(SpectralConv2d):
+    def __init__(self, in_channels, out_channels, modes1, modes2, dropout_p = 0.8):
+        super().__init__(in_channels, out_channels, modes1, modes2)
+        self.dropout = nn.Dropout(p=dropout_p)
+        
+    def forward(self, x):
+        batchsize = x.shape[0]
+        # Compute Fourier coeffcients up to factor of e^(- something constant)
+        x_ft = torch.fft.rfft2(x)
+
+        # determine the Fourier modes
+        if not self.training and config["model"]["FNO"]["probeFourierModes"]: 
+            probe_x = x_ft.detach().abs().numpy()
+            probeFourierModes.collectData(probe_x)
+
+        mask = self.dropout(torch.ones_like(x_ft.real))
+        x_ft = x_ft * mask 
+
+        # Multiply relevant Fourier modes
+        out_ft = torch.zeros(batchsize, self.out_channels,  x.size(-2), x.size(-1)//2 + 1, dtype=torch.cfloat, device=x.device)
+        out_ft[:, :, :self.modes1, :self.modes2] = self.compl_mul2d(x_ft[:, :, :self.modes1, :self.modes2], self.weights1)
+        out_ft[:, :, -self.modes1:, :self.modes2] = self.compl_mul2d(x_ft[:, :, -self.modes1:, :self.modes2], self.weights2)
+
+        # spatial dimensions of the input and output activation maps is the same.
+
+        #Return to physical space
+        x = torch.fft.irfft2(out_ft, s=( x.size(-2), x.size(-1)))
+        return x
