@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils.utilities import periodic_padding
+from utils.utilities import periodic_padding, topKAmplitudes
 from utils.config_module import config
 from utils.probe_fourier_modes import probeFourierModes
 
@@ -115,3 +115,34 @@ class SpectralConv2dDropout(SpectralConv2d):
         #Return to physical space
         x = torch.fft.irfft2(out_ft, s=( x.size(-2), x.size(-1)))
         return x
+    
+class SpectralConv2dAmplitude(SpectralConv2d):
+    def __init__(self, in_channels, out_channels, modes1, modes2, dropout_p = 0.8):
+        super().__init__(in_channels, out_channels, modes1, modes2)
+        self.weights = nn.Parameter(self.scale * torch.rand(in_channels, out_channels, 64, 33, dtype=torch.cfloat))
+        
+    def forward(self, x):
+        xdim = x.shape[2]
+        assert xdim%2 == 0, "Following code is not compatible with odd spatial dimensions"
+        
+        # Compute Fourier coeffcients up to factor of e^(- something constant)
+        x_ft = torch.fft.rfft2(x)
+        
+        # determine the Fourier modes
+        if not self.training and config["model"]["FNO"]["probeFourierModes"]: 
+            probe_x = x_ft.detach().abs().numpy()
+            probeFourierModes.collectData(probe_x)
+
+        x_ft_1 = topKAmplitudes(x_ft[:,:,:xdim//2,:],self.modes1*self.modes2)
+        x_ft_2 = topKAmplitudes(x_ft[:,:,xdim//2:,:],self.modes1*self.modes2)
+        x_ft_trunc = torch.concat((x_ft_1,x_ft_2),dim=2)
+        
+        # Multiply relevant Fourier modes
+        out_ft = self.compl_mul2d(x_ft_trunc[:,:,:self.weights.shape[-2],:self.weights.shape[-1]], self.weights)
+        
+        # spatial dimensions of the input and output activation maps is the same.
+
+        #Return to physical space
+        x = torch.fft.irfft2(out_ft, s=( x.size(-2), x.size(-1)))
+        return x
+    

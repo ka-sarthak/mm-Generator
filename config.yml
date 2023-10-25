@@ -1,5 +1,5 @@
 experiment:
-  name: test
+  name: res64_k_32_with_probe_fourier_modes
   model: nonGAN                  # GAN, nonGAN
   generator: FNO              # FNO, UNet
   inputHeads: 3
@@ -31,10 +31,11 @@ model:
     interfaceChannels: 256
 
   FNO:
-    version: standard         # standard or standard_from_firstFL or standard_from_thirdFL
-    modes1: 20
-    modes2: 20
+    version: standard         # standard or standard_from_firstFL or standard_from_thirdFL or dropout or amplitude
+    modes1: 32
+    modes2: 32
     width: 32
+    dropout: 0.8
     probeFourierModes: True
 
   GAN: 
@@ -44,7 +45,7 @@ model:
 # TODO: define metric and loss function
 training:
   continueTraining: False
-  epochs: 3
+  epochs: 200
   trainValTestSplit:
                   - 800
                   - 100
@@ -63,7 +64,14 @@ inference:
   # if exclude is not null, all but the specified tests will be used
   nTest: 10 
   include: 
+        - '64'
         - '256'
+        - 'aspect_ratio_64'
+        - 'aspect_ratio_128'
+        - 'aspect_ratio_256'
+        - 'aspect_ratio_512'
+        - 'aspect_ratio_1024'
+        - 'aspect_ratio_2048'
         # - '512'
   exclude:
         - 2048_1280grains
@@ -73,21 +81,29 @@ postprocessing:
   # if include is not null, only the specified tests will be used
   # if exclude is not null, all but the specified tests will be used
   include:
+        - '64'
         - '256'
+        - 'aspect_ratio_64'
+        - 'aspect_ratio_128'
+        - 'aspect_ratio_256'
+        - 'aspect_ratio_512'
+        - 'aspect_ratio_1024'
+        - 'aspect_ratio_2048'
         # - '512'
   exclude:
         - 2048_1280grains
   functions:
-        # - plotFields
-        - plotValueHistograms
         - aggregatedError
-        # - plotErrorFields
-        - plotMeanErrorFields
-        - plotErrorHistograms
-        # - gradientFieldsTRUE
-        # - gradientFieldsPRED
-        - mechEquilibriumCondition
-        - periodicityCondition
+        - plotFields
+        - plotErrorFields
+        # - plotMeanErrorFields
+        # - plotValueHistograms
+        # - plotErrorHistograms
+        - gradientFieldsTRUE
+        - gradientFieldsPRED
+        # - mechEquilibriumCondition
+        # - periodicityCondition
+        - FourierAnalysis 
   plotFieldCMap: viridis
   plotErrorFieldCMap: seismic
   plotGradientFieldCMap: Reds

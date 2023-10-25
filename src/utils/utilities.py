@@ -1,6 +1,5 @@
 import torch
 from prettytable import PrettyTable
-from utils.config_module import config
 from torch.nn import L1Loss, MSELoss
 
 def mae(f1,f2):
@@ -83,3 +82,39 @@ def lossFunction(type="L1"):
         return MSELoss()
     else:
         raise AssertionError("Unexpected argument for lossFunction.")
+    
+def topKAmplitudes(tensor,k):
+    '''
+		return a tensor of same shape as the input where
+		top k elements in terms of magnitude are retained 
+  		and other elements are substituted with 0
+    '''
+    topK = torch.topk(tensor.flatten(-2,-1).abs(),k,-1)
+    topKth = topK.values[...,-1].unsqueeze(-1).unsqueeze(-1)
+    condition = tensor.abs() >= topKth
+    res = torch.where(condition,tensor,0)
+    return res
+    
+if __name__=="__main__":
+    
+    x = torch.randn((2,2,4,2)) + 1 
+    res = topKvalues(x,3)
+    print(x)
+    print(res)
+    
+    # modes = 2
+    # xdim,ydim = 8,5
+    # x_ft = torch.randn((1,2,xdim,ydim))+1
+    # w1 = torch.randn(2,2,xdim,ydim)
+    # w2 = torch.randn(2,2,xdim,ydim)
+    
+    # x_ft_ = x_ft
+    # w1_ = w1
+    # w2_ = w2
+    
+    # x_ft_ = torch.einsum("bixy,ioxy->boxy",x_ft_[:,:,:modes,:modes],w1_[:,:,:modes,:modes])
+    # x_ft_ = torch.einsum("bixy,ioxy->boxy",x_ft_[:,:,-modes:,:modes],w2_[:,:,-modes:,:modes])
+    
+    # output = x_ft_
+    # w1 = w1_
+    # w2 = w2_
